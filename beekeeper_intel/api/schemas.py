@@ -5,7 +5,7 @@ Typed request/response schemas for FastAPI interface.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -29,6 +29,11 @@ class QueryRequest(BaseModel):
     session_id: Optional[str] = None
     user_id: Optional[str] = None
     include_trace: bool = Field(False, description="Include orchestration trace in response.")
+    llm_provider: Optional[Literal["openai", "deepseek"]] = Field(
+        None, description="Optional LLM provider; enables LLM synthesis if provided."
+    )
+    llm_api_key: Optional[str] = Field(None, description="API key for the selected provider (per-request).")
+    llm_model: Optional[str] = Field(None, description="Optional model name for the provider.")
 
 
 class ReportRequest(BaseModel):
@@ -38,6 +43,11 @@ class ReportRequest(BaseModel):
     session_id: Optional[str] = None
     user_id: Optional[str] = None
     include_trace: bool = Field(False, description="Include orchestration trace in response.")
+    llm_provider: Optional[Literal["openai", "deepseek"]] = Field(
+        None, description="Optional LLM provider; enables LLM synthesis if provided."
+    )
+    llm_api_key: Optional[str] = Field(None, description="API key for the selected provider (per-request).")
+    llm_model: Optional[str] = Field(None, description="Optional model name for the provider.")
 
 
 class DocumentIngestItem(BaseModel):

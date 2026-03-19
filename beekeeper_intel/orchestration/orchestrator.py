@@ -23,7 +23,7 @@ import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Callable, Dict, Iterable, List, Optional, Protocol, Sequence
+from typing import Dict, List, Optional, Protocol
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
@@ -296,6 +296,9 @@ class PlatformOrchestrator:
         context_state: Optional[MultiTurnContextState] = None,
         mode: PipelineMode = PipelineMode.auto,
         user_id: Optional[str] = None,
+        llm_provider: Optional[str] = None,
+        llm_api_key: Optional[str] = None,
+        llm_model: Optional[str] = None,
     ) -> OrchestratorResult:
         trace: List[OrchestrationTraceEvent] = []
         state = context_state or MultiTurnContextState(session_id=str(uuid4()))
@@ -383,7 +386,17 @@ class PlatformOrchestrator:
             # synthesis
             if run_mode == PipelineMode.conversational_qa:
                 self._trace(trace, "synthesis_qa", "Synthesizing final conversational answer.")
-                final_answer = self._synthesize_answer(query, plan, evidence, extracted, critic_decision)
+                final_answer = self._synthesize_answer(
+                    query,
+                    plan,
+                    evidence,
+                    extracted,
+                    critic_decision,
+                    llm_provider=llm_provider,
+                    llm_api_key=llm_api_key,
+                    llm_model=llm_model,
+                    trace=trace,
+                )
                 answer_bundle = build_answer_bundle(final_answer)
                 self._trace(trace, "done", "Completed conversational QA pipeline.")
                 return OrchestratorResult(
@@ -395,7 +408,17 @@ class PlatformOrchestrator:
                 )
 
             self._trace(trace, "synthesis_report", "Synthesizing final structured report.")
-            report = self._synthesize_report(query, plan, evidence, extracted, critic_decision)
+            report = self._synthesize_report(
+                query,
+                plan,
+                evidence,
+                extracted,
+                critic_decision,
+                llm_provider=llm_provider,
+                llm_api_key=llm_api_key,
+                llm_model=llm_model,
+                trace=trace,
+            )
             section_to_evidence = {
                 "needs": evidence,
                 "workflow_frictions": evidence,
@@ -431,22 +454,89 @@ class PlatformOrchestrator:
         evidence: List[RetrievedEvidence],
         extracted: List[ExtractedNeedInsight],
         critic: Optional[CriticDecision],
+        *,
+        llm_provider: Optional[str],
+        llm_api_key: Optional[str],
+        llm_model: Optional[str],
+        trace: List[OrchestrationTraceEvent],
     ) -> FinalAnswer:
-        if extracted:
-            top = extracted[:3]
-            lines = [f"- {x.problem}" for x in top]
-            ans = "Grounded findings from retrieved evidence:\n" + "\n".join(lines)
-        elif evidence:
-            ans = "Grounded evidence found, but structured need signals are limited. Review sources for details."
-        else:
-            ans = "Insufficient grounded evidence found for this query."
-        if critic and critic.confidence_adjustment < 0:
-            ans += "\n\nNote: Confidence reduced due to evidence limitations."
         citations = _collect_citations(evidence)
+
+        # Deterministic fallback (always available).
+        def _fallback_text() -> str:
+            if extracted:
+                top = extracted[:3]
+                lines = [f"- {x.problem}" for x in top]
+                ans = "Grounded findings from retrieved evidence:\n" + "\n".join(lines)
+            elif evidence:
+                ans = (
+                    "Grounded evidence found, but structured need signals are limited. "
+                    "Review sources for details."
+                )
+            else:
+                ans = "Insufficient grounded evidence found for this query."
+            if critic and critic.confidence_adjustment < 0:
+                ans += "\n\nNote: Confidence reduced due to evidence limitations."
+            return ans
+
+        if llm_api_key:
+            try:
+                from beekeeper_intel.llm.openai_compatible_client import (
+                    OpenAICompatibleChatClient,
+                    OpenAICompatibleClientConfig,
+                )
+
+                provider = (llm_provider or "deepseek").lower()
+                default_models = {
+                    "openai": "gpt-4o-mini",
+                    "deepseek": "deepseek-chat",
+                }
+                default_bases = {
+                    "openai": "https://api.openai.com",
+                    "deepseek": "https://api.deepseek.com",
+                }
+
+                model = llm_model or default_models.get(provider, "deepseek-chat")
+                base_url = default_bases.get(provider, "https://api.deepseek.com")
+
+                cfg = OpenAICompatibleClientConfig(api_key=llm_api_key, base_url=base_url, model=model)
+                client = OpenAICompatibleChatClient(cfg=cfg)
+
+                extracted_signals = [
+                    {
+                        "persona": str(x.persona) if x.persona is not None else None,
+                        "topic": str(x.topic) if x.topic is not None else None,
+                        "workflow_stage": str(x.workflow_stage) if x.workflow_stage is not None else None,
+                        "problem": x.problem,
+                        "pain_severity_1_5": x.pain_severity_1_5,
+                        "unmet_need": x.unmet_need,
+                        "current_workaround": x.current_workaround,
+                        "product_signal": x.product_signal,
+                    }
+                    for x in extracted[:6]
+                ]
+                evidence_texts = [e.evidence_text for e in evidence[:6]]
+
+                llm_text = client.generate_answer(
+                    query=query.text,
+                    extracted_signals=extracted_signals,
+                    evidence_texts=evidence_texts,
+                )
+                if llm_text:
+                    return FinalAnswer(
+                        query=query,
+                        plan=plan,
+                        answer=llm_text,
+                        citations=citations,
+                        evidence=evidence,
+                    )
+            except Exception as exc:
+                self._trace(trace, "llm_error", "LLM synthesis failed; falling back to deterministic answer.", error=str(exc))
+
         return FinalAnswer(
             query=query,
             plan=plan,
-            answer=ans,
+            answer=_fallback_text(),
             citations=citations,
             evidence=evidence,
         )
@@ -458,6 +548,11 @@ class PlatformOrchestrator:
         evidence: List[RetrievedEvidence],
         extracted: List[ExtractedNeedInsight],
         critic: Optional[CriticDecision],
+        *,
+        llm_provider: Optional[str],
+        llm_api_key: Optional[str],
+        llm_model: Optional[str],
+        trace: List[OrchestrationTraceEvent],
     ) -> FinalResearchReport:
         clusters = self.extractor.aggregate(extracted)
         needs: List[NeedInsight] = []
@@ -478,12 +573,58 @@ class PlatformOrchestrator:
                 )
             )
 
-        summary = (
+        deterministic_summary = (
             f"Extracted {len(needs)} prioritized need insights from {len(evidence)} evidence bundles. "
             f"Top themes include workflow friction, labor burden, and unmet product support."
         )
         if critic and critic.retrieval_gap:
-            summary += f" Retrieval gap noted: {critic.retrieval_gap}."
+            deterministic_summary += f" Retrieval gap noted: {critic.retrieval_gap}."
+
+        summary = deterministic_summary
+        if llm_api_key:
+            try:
+                from beekeeper_intel.llm.openai_compatible_client import (
+                    OpenAICompatibleChatClient,
+                    OpenAICompatibleClientConfig,
+                )
+
+                provider = (llm_provider or "deepseek").lower()
+                default_models = {
+                    "openai": "gpt-4o-mini",
+                    "deepseek": "deepseek-chat",
+                }
+                default_bases = {
+                    "openai": "https://api.openai.com",
+                    "deepseek": "https://api.deepseek.com",
+                }
+
+                model = llm_model or default_models.get(provider, "deepseek-chat")
+                base_url = default_bases.get(provider, "https://api.deepseek.com")
+
+                cfg = OpenAICompatibleClientConfig(api_key=llm_api_key, base_url=base_url, model=model)
+                client = OpenAICompatibleChatClient(cfg=cfg)
+
+                needs_signals = [
+                    {
+                        "persona": str(n.persona),
+                        "topic": str(n.topic),
+                        "workflow_stage": str(n.workflow_stage) if n.workflow_stage is not None else None,
+                        "statement": n.statement,
+                        "pain_severity_1_5": n.pain_severity_1_5,
+                        "unmet_need": n.unmet_need,
+                    }
+                    for n in needs[:8]
+                ]
+                evidence_texts = [e.evidence_text for e in evidence[:6]]
+                summary_llm = client.generate_report_summary(
+                    query=query.text,
+                    needs_signals=needs_signals,
+                    evidence_texts=evidence_texts,
+                )
+                if summary_llm:
+                    summary = summary_llm
+            except Exception as exc:
+                self._trace(trace, "llm_error", "LLM report synthesis failed; keeping deterministic summary.", error=str(exc))
 
         return FinalResearchReport(
             query=query,

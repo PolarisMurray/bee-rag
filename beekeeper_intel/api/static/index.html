@@ -108,6 +108,23 @@
           </div>
         </div>
 
+        <div class="row">
+          <div>
+            <label for="llmProvider">LLM Provider</label>
+            <select id="llmProvider">
+              <option value="openai">OpenAI</option>
+              <option value="deepseek" selected>DeepSeek</option>
+            </select>
+          </div>
+          <div>
+            <label for="llmModel">Model</label>
+            <input id="llmModel" placeholder="deepseek-chat" />
+          </div>
+        </div>
+
+        <label for="llmKey">LLM API Key (per request)</label>
+        <input id="llmKey" type="password" placeholder="Paste key here..." />
+
         <button id="runBtn">Run</button>
       </div>
 
@@ -126,6 +143,9 @@
         const query = document.getElementById("query").value.trim();
         const sessionId = document.getElementById("session").value.trim();
         const userId = document.getElementById("user").value.trim();
+        const llmProvider = document.getElementById("llmProvider").value;
+        const llmModel = document.getElementById("llmModel").value.trim();
+        const llmKey = document.getElementById("llmKey").value.trim();
 
         if (!query) {
           out.textContent = "Please enter a query.";
@@ -139,6 +159,11 @@
         };
         if (sessionId) payload.session_id = sessionId;
         if (userId) payload.user_id = userId;
+        if (llmKey) {
+          payload.llm_provider = llmProvider;
+          payload.llm_api_key = llmKey;
+          if (llmModel) payload.llm_model = llmModel;
+        }
 
         runBtn.disabled = true;
         out.textContent = "Running...";

@@ -79,6 +79,9 @@ def query(request_body: QueryRequest, request: Request) -> QueryResponse:
         context_state=session_state,
         mode=PipelineMode.conversational_qa,
         user_id=request_body.user_id,
+        llm_provider=request_body.llm_provider,
+        llm_api_key=request_body.llm_api_key,
+        llm_model=request_body.llm_model,
     )
     if not result.success or result.answer_bundle is None:
         raise HTTPException(status_code=500, detail=result.error or "Failed to process query.")
@@ -106,6 +109,9 @@ def research_report(request_body: ReportRequest, request: Request) -> ReportResp
         context_state=session_state,
         mode=PipelineMode.research_synthesis,
         user_id=request_body.user_id,
+        llm_provider=request_body.llm_provider,
+        llm_api_key=request_body.llm_api_key,
+        llm_model=request_body.llm_model,
     )
     if not result.success or result.report_bundle is None:
         raise HTTPException(status_code=500, detail=result.error or "Failed to generate report.")
