@@ -128,6 +128,8 @@ class ReportResponse(BaseModel):
     session_id: Optional[str] = None
     executive_summary: str
     needs_count: int = 0
+    key_needs: List[str] = Field(default_factory=list)
+    gaps_and_unknowns: List[str] = Field(default_factory=list)
     citations: List[CitationView] = Field(default_factory=list)
     evidence_map: Dict[str, List[str]] = Field(default_factory=dict)
     trace: List[OrchestrationTraceEvent] = Field(default_factory=list)

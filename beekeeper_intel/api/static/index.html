@@ -7,76 +7,394 @@
     <style>
       :root {
         color-scheme: dark;
+        --bg: #0d0f14;
+        --panel: rgba(23, 26, 33, 0.9);
+        --panel-strong: rgba(18, 20, 26, 0.96);
+        --line: #2d3442;
+        --muted: #a7b1c2;
+        --text: #f3f5f7;
+        --honey: #f6b73c;
+        --honey-soft: #ffd978;
+        --leaf: #7fd6a6;
+        --danger: #ff7b72;
+        --blue: #64a6ff;
+        --shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
       }
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         margin: 0;
-        background: #0f1115;
-        color: #e6e6e6;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at top right, rgba(246, 183, 60, 0.16), transparent 22%),
+          radial-gradient(circle at left center, rgba(127, 214, 166, 0.08), transparent 18%),
+          linear-gradient(180deg, #0b0d12 0%, #11151d 100%);
+        color: var(--text);
+        position: relative;
+        overflow-x: hidden;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.22;
+        background-image:
+          linear-gradient(30deg, rgba(246, 183, 60, 0.06) 12%, transparent 12.5%, transparent 87%, rgba(246, 183, 60, 0.06) 87.5%, rgba(246, 183, 60, 0.06)),
+          linear-gradient(150deg, rgba(246, 183, 60, 0.06) 12%, transparent 12.5%, transparent 87%, rgba(246, 183, 60, 0.06) 87.5%, rgba(246, 183, 60, 0.06)),
+          linear-gradient(90deg, rgba(246, 183, 60, 0.045) 2%, transparent 2.5%, transparent 97%, rgba(246, 183, 60, 0.045) 97.5%, rgba(246, 183, 60, 0.045));
+        background-size: 52px 90px;
+        background-position: 0 0, 0 0, 26px 45px;
       }
       .wrap {
-        max-width: 980px;
-        margin: 28px auto;
-        padding: 0 18px;
+        max-width: 1180px;
+        margin: 32px auto 48px;
+        padding: 0 20px 32px;
+        position: relative;
+        z-index: 1;
+      }
+      .hero {
+        display: grid;
+        grid-template-columns: 1.35fr 0.95fr;
+        gap: 18px;
+        margin-bottom: 18px;
+      }
+      .hero-card,
+      .card {
+        background: var(--panel);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: var(--shadow);
+      }
+      .hero-card {
+        position: relative;
+        overflow: hidden;
+      }
+      .hero-card::after {
+        content: "";
+        position: absolute;
+        width: 180px;
+        height: 180px;
+        border-radius: 24px;
+        background: radial-gradient(circle, rgba(246, 183, 60, 0.2), transparent 70%);
+        right: -30px;
+        top: -30px;
+      }
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--honey-soft);
+        margin-bottom: 12px;
+      }
+      .bee-mark {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background:
+          linear-gradient(90deg, #111 0 20%, var(--honey) 20% 42%, #111 42% 57%, var(--honey) 57% 80%, #111 80% 100%);
+        box-shadow:
+          inset 0 0 0 2px rgba(255, 255, 255, 0.06),
+          0 0 18px rgba(246, 183, 60, 0.22);
       }
       h1 {
-        margin: 0 0 12px;
-        font-size: 1.3rem;
+        margin: 0 0 10px;
+        font-size: clamp(1.8rem, 2.6vw, 2.8rem);
+        line-height: 1.05;
       }
-      .card {
-        background: #171a21;
-        border: 1px solid #252a35;
-        border-radius: 10px;
-        padding: 14px;
-        margin-bottom: 14px;
+      .subtitle {
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.6;
+        max-width: 62ch;
+      }
+      .hero-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 18px;
+      }
+      .metric {
+        background: rgba(12, 14, 19, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 14px;
+        padding: 12px;
+      }
+      .metric strong {
+        display: block;
+        font-size: 1.2rem;
+        color: var(--honey-soft);
+        margin-bottom: 4px;
+      }
+      .metric span {
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+      .support-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 14px;
+      }
+      .support-card h2,
+      .card h2 {
+        margin: 0 0 8px;
+        font-size: 1.05rem;
+      }
+      .quick-prompts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .chip {
+        border: 1px solid rgba(246, 183, 60, 0.24);
+        background: rgba(246, 183, 60, 0.08);
+        color: #ffe39b;
+        border-radius: 999px;
+        padding: 9px 12px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+      }
+      .chip:hover {
+        transform: translateY(-1px);
+        border-color: rgba(246, 183, 60, 0.45);
+        background: rgba(246, 183, 60, 0.13);
       }
       textarea, input, select {
         width: 100%;
         margin-top: 8px;
         box-sizing: border-box;
-        border-radius: 8px;
-        border: 1px solid #303747;
-        background: #11141b;
-        color: #e6e6e6;
-        padding: 10px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: rgba(12, 14, 19, 0.94);
+        color: var(--text);
+        padding: 11px 12px;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+      }
+      textarea:focus, input:focus, select:focus {
+        outline: none;
+        border-color: rgba(246, 183, 60, 0.55);
+        box-shadow: 0 0 0 4px rgba(246, 183, 60, 0.1);
       }
       textarea {
-        min-height: 110px;
+        min-height: 130px;
         resize: vertical;
       }
       .row {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 12px;
+        gap: 14px;
+      }
+      .three {
+        grid-template-columns: 1.05fr 1.05fr 1.4fr;
+      }
+      .label-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .label-row span {
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
       }
       button {
-        margin-top: 10px;
-        background: #3d7eff;
-        color: #fff;
         border: none;
-        border-radius: 8px;
-        padding: 10px 14px;
+        border-radius: 12px;
+        padding: 10px 16px;
         cursor: pointer;
+        font-weight: 600;
+        transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+      }
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+      .primary {
+        background: linear-gradient(135deg, #f6b73c 0%, #ffcd5a 100%);
+        color: #1d1304;
+        box-shadow: 0 10px 24px rgba(246, 183, 60, 0.18);
+      }
+      .secondary {
+        background: rgba(100, 166, 255, 0.1);
+        color: #dbe9ff;
+        border: 1px solid rgba(100, 166, 255, 0.22);
+      }
+      .ghost {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--muted);
+        border: 1px solid rgba(255, 255, 255, 0.08);
       }
       button:disabled {
         opacity: 0.55;
         cursor: not-allowed;
       }
+      .results-grid {
+        display: grid;
+        grid-template-columns: 1.55fr 1fr;
+        gap: 18px;
+        align-items: start;
+      }
+      .response-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .panel {
+        background: var(--panel-strong);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 16px;
+      }
+      .status-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        padding: 8px 12px;
+        background: rgba(100, 166, 255, 0.1);
+        color: #d2e4ff;
+        border: 1px solid rgba(100, 166, 255, 0.2);
+        font-size: 0.88rem;
+      }
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--blue);
+      }
+      .status-dot.ok {
+        background: var(--leaf);
+      }
+      .status-dot.err {
+        background: var(--danger);
+      }
+      .section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .section-title h3 {
+        margin: 0;
+        font-size: 1rem;
+      }
+      .section-title .muted {
+        font-size: 0.84rem;
+      }
+      .answer-text {
+        font-size: 1rem;
+        line-height: 1.75;
+        color: #eef1f5;
+      }
+      .answer-text p {
+        margin: 0 0 12px;
+      }
+      .answer-text ul {
+        margin: 10px 0 0 18px;
+      }
+      .list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .item {
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 14px;
+        padding: 12px 14px;
+        background: rgba(255, 255, 255, 0.025);
+      }
+      .item strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+      .item p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+      .item small {
+        display: inline-block;
+        margin-top: 8px;
+        color: #d9e6fb;
+      }
+      .quote {
+        color: #f6dfb0;
+        font-style: italic;
+      }
+      .empty {
+        color: var(--muted);
+        text-align: center;
+        padding: 28px 14px;
+        border: 1px dashed rgba(255, 255, 255, 0.12);
+        border-radius: 14px;
+      }
+      details {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.02);
+      }
+      summary {
+        list-style: none;
+        cursor: pointer;
+        padding: 12px 14px;
+        font-weight: 600;
+      }
+      summary::-webkit-details-marker {
+        display: none;
+      }
+      details[open] summary {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
       pre {
         white-space: pre-wrap;
         word-break: break-word;
-        background: #0f1115;
-        border: 1px solid #252a35;
-        border-radius: 8px;
-        padding: 10px;
+        background: #0b0d12;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        padding: 14px;
         margin: 0;
+        color: #dbe7f7;
+        font-size: 0.88rem;
       }
       .muted {
-        color: #9aa3b5;
+        color: var(--muted);
         font-size: 0.9rem;
       }
+      .caption {
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin-top: 8px;
+      }
+      .hidden {
+        display: none !important;
+      }
       @media (max-width: 760px) {
+        .hero,
+        .results-grid,
         .row {
+          grid-template-columns: 1fr;
+        }
+        .three,
+        .hero-metrics {
           grid-template-columns: 1fr;
         }
       }
@@ -84,71 +402,362 @@
   </head>
   <body>
     <div class="wrap">
-      <h1>Beekeeper Research Intelligence Platform</h1>
-      <div class="muted">Interactive debug UI for query and research report endpoints.</div>
-
-      <div class="card">
-        <label for="mode">Mode</label>
-        <select id="mode">
-          <option value="query">Conversational Q&A</option>
-          <option value="report">Research Report</option>
-        </select>
-
-        <label for="query">Query</label>
-        <textarea id="query" placeholder="Ask about beekeeper pain points, workflows, unmet needs..."></textarea>
-
-        <div class="row">
-          <div>
-            <label for="session">Session ID</label>
-            <input id="session" placeholder="demo-session-1" />
+      <div class="hero">
+        <div class="hero-card">
+          <div class="eyebrow">
+            <div class="bee-mark"></div>
+            Beekeeper Research Intelligence
           </div>
-          <div>
-            <label for="user">User ID (optional)</label>
-            <input id="user" placeholder="alex" />
+          <h1>Grounded beekeeper research with a softer, more human workflow.</h1>
+          <div class="subtitle">
+            Ask about beekeeper pain points, compare personas, generate opportunity-facing
+            reports, and review the evidence behind every answer without digging through raw JSON.
           </div>
-        </div>
-
-        <div class="row">
-          <div>
-            <label for="llmProvider">LLM Provider</label>
-            <select id="llmProvider">
-              <option value="openai">OpenAI</option>
-              <option value="deepseek" selected>DeepSeek</option>
-            </select>
-          </div>
-          <div>
-            <label for="llmModel">Model</label>
-            <input id="llmModel" placeholder="deepseek-chat" />
+          <div class="hero-metrics">
+            <div class="metric">
+              <strong>Q&A</strong>
+              <span>Multi-turn answers with citations and evidence context</span>
+            </div>
+            <div class="metric">
+              <strong>Reports</strong>
+              <span>Structured research synthesis for unmet need discovery</span>
+            </div>
+            <div class="metric">
+              <strong>Traceable</strong>
+              <span>See citations, evidence, and pipeline steps when needed</span>
+            </div>
           </div>
         </div>
 
-        <label for="llmKey">LLM API Key (per request)</label>
-        <input id="llmKey" type="password" placeholder="Paste key here..." />
-
-        <button id="runBtn">Run</button>
+        <div class="hero-card support-card">
+          <div>
+            <h2>Try a question</h2>
+            <div class="muted">Tap a prompt to start with a more natural research workflow.</div>
+          </div>
+          <div class="quick-prompts">
+            <button class="chip" data-prompt="What do hobbyist beekeepers struggle with most in varroa monitoring?">Varroa pain points</button>
+            <button class="chip" data-prompt="Compare hobbyist vs commercial unmet needs in overwintering workflows.">Overwintering comparison</button>
+            <button class="chip" data-prompt="What workarounds do beekeepers use when inspections become too labor-intensive?">Workaround analysis</button>
+            <button class="chip" data-prompt="Generate a research summary of queen quality frustrations and product signals.">Queen quality report</button>
+          </div>
+          <div class="caption">
+            Tip: if you paste an API key, the final answer text is generated by the selected LLM.
+            Without a key, the app still runs with the built-in debug fallback.
+          </div>
+        </div>
       </div>
 
-      <div class="card">
-        <div class="muted">Response</div>
-        <pre id="out">No request yet.</pre>
+      <div class="results-grid">
+        <div class="response-shell">
+          <div class="card">
+            <div class="label-row">
+              <label for="mode">Mode</label>
+              <span id="modeHelp">Ask a direct research question and receive a grounded answer.</span>
+            </div>
+            <select id="mode">
+              <option value="query">Conversational Q&A</option>
+              <option value="report">Research Report</option>
+            </select>
+
+            <div class="label-row" style="margin-top: 14px;">
+              <label for="query">Query</label>
+              <span>Be explicit when you want comparisons, gaps, or unmet needs.</span>
+            </div>
+            <textarea id="query" placeholder="Ask about beekeeper pain points, workflows, unmet needs..."></textarea>
+
+            <div class="row">
+              <div>
+                <label for="session">Session ID</label>
+                <input id="session" placeholder="demo-session-1" />
+              </div>
+              <div>
+                <label for="user">User ID (optional)</label>
+                <input id="user" placeholder="alex" />
+              </div>
+            </div>
+
+            <div class="row three" style="margin-top: 6px;">
+              <div>
+                <label for="llmProvider">LLM Provider</label>
+                <select id="llmProvider">
+                  <option value="openai">OpenAI</option>
+                  <option value="deepseek" selected>DeepSeek</option>
+                </select>
+              </div>
+              <div>
+                <label for="llmModel">Model (optional)</label>
+                <input id="llmModel" placeholder="Leave blank for the recommended default" />
+              </div>
+              <div>
+                <label for="llmKey">LLM API Key (per request)</label>
+                <input id="llmKey" type="password" placeholder="Paste your key here..." />
+              </div>
+            </div>
+
+            <div class="actions">
+              <button id="runBtn" class="primary">Run Research</button>
+              <button id="clearBtn" class="secondary" type="button">Clear</button>
+              <button id="copyBtn" class="ghost hidden" type="button">Copy Main Result</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="status-bar">
+              <div class="status-pill">
+                <span id="statusDot" class="status-dot"></span>
+                <span id="statusText">Ready for a question</span>
+              </div>
+              <div id="metaInfo" class="muted">No request yet</div>
+            </div>
+
+            <div id="mainResult" class="answer-text">
+              <div class="empty">
+                Ask a beekeeper research question or generate a report. Your answer will appear here as readable text.
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="section-title">
+              <h3>Evidence and citations</h3>
+              <div class="muted">Traceability without reading raw response payloads</div>
+            </div>
+            <div id="citationsList" class="list">
+              <div class="empty">Citations will appear here after you run a question.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="response-shell">
+          <div class="panel">
+            <div class="section-title">
+              <h3>Supporting evidence</h3>
+              <div class="muted">Short excerpts preserved from retrieval</div>
+            </div>
+            <div id="evidenceList" class="list">
+              <div class="empty">Evidence snippets will appear here.</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="section-title">
+              <h3>Pipeline trace</h3>
+              <div class="muted">Useful for debugging and QA</div>
+            </div>
+            <div id="traceList" class="list">
+              <div class="empty">Run a request to inspect orchestration steps.</div>
+            </div>
+          </div>
+
+          <details>
+            <summary>Raw response (debug)</summary>
+            <pre id="rawOut">No request yet.</pre>
+          </details>
+        </div>
       </div>
     </div>
 
     <script>
       const runBtn = document.getElementById("runBtn");
-      const out = document.getElementById("out");
+      const clearBtn = document.getElementById("clearBtn");
+      const copyBtn = document.getElementById("copyBtn");
+      const rawOut = document.getElementById("rawOut");
+      const modeEl = document.getElementById("mode");
+      const queryEl = document.getElementById("query");
+      const modeHelp = document.getElementById("modeHelp");
+      const statusText = document.getElementById("statusText");
+      const statusDot = document.getElementById("statusDot");
+      const metaInfo = document.getElementById("metaInfo");
+      const mainResult = document.getElementById("mainResult");
+      const citationsList = document.getElementById("citationsList");
+      const evidenceList = document.getElementById("evidenceList");
+      const traceList = document.getElementById("traceList");
+      const llmProviderEl = document.getElementById("llmProvider");
+      const llmModelEl = document.getElementById("llmModel");
+
+      const defaults = {
+        openai: "gpt-4o-mini",
+        deepseek: "deepseek-chat",
+      };
+
+      function escapeHtml(text) {
+        return String(text || "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll("\"", "&quot;");
+      }
+
+      function setModeHelp() {
+        if (modeEl.value === "report") {
+          modeHelp.textContent = "Generate a concise research synthesis with key needs and evidence-backed themes.";
+        } else {
+          modeHelp.textContent = "Ask a direct research question and receive a grounded answer.";
+        }
+      }
+
+      function setDefaultModel() {
+        if (!llmModelEl.value.trim()) {
+          llmModelEl.placeholder = `Leave blank to use ${defaults[llmProviderEl.value]}`;
+        }
+      }
+
+      function setStatus(kind, text, meta) {
+        statusText.textContent = text;
+        metaInfo.textContent = meta || "";
+        statusDot.className = "status-dot";
+        if (kind === "ok") statusDot.classList.add("ok");
+        if (kind === "error") statusDot.classList.add("err");
+      }
+
+      function renderParagraphs(text) {
+        const blocks = String(text || "")
+          .trim()
+          .split(/\n\s*\n/)
+          .filter(Boolean)
+          .map((part) => {
+            if (part.includes("\n- ") || part.startsWith("- ")) {
+              const items = part
+                .split("\n")
+                .map((x) => x.trim())
+                .filter(Boolean)
+                .map((x) => x.replace(/^- /, ""));
+              return `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
+            }
+            return `<p>${escapeHtml(part).replaceAll("\n", "<br>")}</p>`;
+          });
+        return blocks.join("");
+      }
+
+      function renderMainResult(data) {
+        copyBtn.classList.remove("hidden");
+        if (data.mode === "research_synthesis") {
+          const needs = Array.isArray(data.key_needs) ? data.key_needs : [];
+          const gaps = Array.isArray(data.gaps_and_unknowns) ? data.gaps_and_unknowns : [];
+          mainResult.innerHTML = `
+            ${renderParagraphs(data.executive_summary)}
+            <div class="panel" style="margin-top: 14px;">
+              <div class="section-title">
+                <h3>Key needs surfaced</h3>
+                <div class="muted">${data.needs_count || 0} prioritized need signals</div>
+              </div>
+              ${
+                needs.length
+                  ? `<div class="list">${needs.map((need) => `<div class="item"><strong>${escapeHtml(need)}</strong></div>`).join("")}</div>`
+                  : `<div class="empty">No structured need statements were returned for this report.</div>`
+              }
+            </div>
+            ${
+              gaps.length
+                ? `<div class="panel" style="margin-top: 14px;">
+                    <div class="section-title"><h3>Gaps and unknowns</h3><div class="muted">Where more evidence may be needed</div></div>
+                    <div class="list">${gaps.map((gap) => `<div class="item"><strong>${escapeHtml(gap)}</strong></div>`).join("")}</div>
+                  </div>`
+                : ""
+            }
+          `;
+          return;
+        }
+        mainResult.innerHTML = renderParagraphs(data.answer);
+      }
+
+      function renderCitations(data) {
+        const citations = Array.isArray(data.citations) ? data.citations : [];
+        if (!citations.length) {
+          citationsList.innerHTML = `<div class="empty">No citations were returned for this request.</div>`;
+          return;
+        }
+        citationsList.innerHTML = citations
+          .map((c) => {
+            const quote = c.quote ? `<p class="quote">"${escapeHtml(c.quote)}"</p>` : "";
+            const meta = [c.rendered, c.source_uri].filter(Boolean).join(" · ");
+            return `
+              <div class="item">
+                <strong>${escapeHtml(c.source_title)}</strong>
+                ${quote}
+                <small>${escapeHtml(meta)}</small>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderEvidence(data) {
+        const evidence = Array.isArray(data.evidence) ? data.evidence : [];
+        if (evidence.length) {
+          evidenceList.innerHTML = evidence
+            .map(
+              (item, idx) => `
+                <div class="item">
+                  <strong>Evidence ${idx + 1}</strong>
+                  <p>${escapeHtml(item.text)}</p>
+                  <small>${escapeHtml((item.postprocess_steps || []).join(" -> "))}</small>
+                </div>
+              `
+            )
+            .join("");
+          return;
+        }
+
+        const evidenceMap = data.evidence_map || {};
+        const sections = Object.entries(evidenceMap);
+        if (!sections.length) {
+          evidenceList.innerHTML = `<div class="empty">No supporting evidence snippets were returned.</div>`;
+          return;
+        }
+        evidenceList.innerHTML = sections
+          .map(
+            ([section, values]) => `
+              <div class="item">
+                <strong>${escapeHtml(section.replaceAll("_", " "))}</strong>
+                <p>${(values || []).map((v) => escapeHtml(v)).join("<br>")}</p>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function renderTrace(data) {
+        const trace = Array.isArray(data.trace) ? data.trace : [];
+        if (!trace.length) {
+          traceList.innerHTML = `<div class="empty">No trace included. Enable trace in the request payload if needed.</div>`;
+          return;
+        }
+        traceList.innerHTML = trace
+          .map(
+            (step) => `
+              <div class="item">
+                <strong>${escapeHtml(step.step)}</strong>
+                <p>${escapeHtml(step.message || "")}</p>
+                <small>${escapeHtml(step.ts || "")}</small>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function resetResults() {
+        mainResult.innerHTML = `<div class="empty">Ask a beekeeper research question or generate a report. Your answer will appear here as readable text.</div>`;
+        citationsList.innerHTML = `<div class="empty">Citations will appear here after you run a question.</div>`;
+        evidenceList.innerHTML = `<div class="empty">Evidence snippets will appear here.</div>`;
+        traceList.innerHTML = `<div class="empty">Run a request to inspect orchestration steps.</div>`;
+        rawOut.textContent = "No request yet.";
+        copyBtn.classList.add("hidden");
+        setStatus("idle", "Ready for a question", "No request yet");
+      }
 
       async function run() {
-        const mode = document.getElementById("mode").value;
-        const query = document.getElementById("query").value.trim();
+        const mode = modeEl.value;
+        const query = queryEl.value.trim();
         const sessionId = document.getElementById("session").value.trim();
         const userId = document.getElementById("user").value.trim();
-        const llmProvider = document.getElementById("llmProvider").value;
-        const llmModel = document.getElementById("llmModel").value.trim();
+        const llmProvider = llmProviderEl.value;
+        const llmModel = llmModelEl.value.trim();
         const llmKey = document.getElementById("llmKey").value.trim();
 
         if (!query) {
-          out.textContent = "Please enter a query.";
+          setStatus("error", "Missing question", "Enter a query before running.");
+          mainResult.innerHTML = `<div class="empty">Please enter a query before you run the workflow.</div>`;
           return;
         }
 
@@ -166,7 +775,8 @@
         }
 
         runBtn.disabled = true;
-        out.textContent = "Running...";
+        setStatus("running", "Running research workflow", llmKey ? `${llmProvider} enabled` : "Using built-in fallback");
+        mainResult.innerHTML = `<div class="empty">Gathering evidence, synthesizing response, and organizing results...</div>`;
         try {
           const res = await fetch(endpoint, {
             method: "POST",
@@ -174,14 +784,54 @@
             body: JSON.stringify(payload),
           });
           const data = await res.json();
-          out.textContent = JSON.stringify(data, null, 2);
+          rawOut.textContent = JSON.stringify(data, null, 2);
+          if (!res.ok) {
+            throw new Error(data.detail || data.error || "Request failed.");
+          }
+          renderMainResult(data);
+          renderCitations(data);
+          renderEvidence(data);
+          renderTrace(data);
+          setStatus("ok", "Completed", `${data.mode} · session ${data.session_id || "new"}`);
         } catch (err) {
-          out.textContent = "Request failed: " + (err?.message || String(err));
+          setStatus("error", "Request failed", "Please review the message below.");
+          mainResult.innerHTML = `<div class="empty">${escapeHtml(err?.message || String(err))}</div>`;
+          citationsList.innerHTML = `<div class="empty">No citations available because the request did not complete successfully.</div>`;
+          evidenceList.innerHTML = `<div class="empty">No evidence available because the request failed.</div>`;
+          traceList.innerHTML = `<div class="empty">No trace available because the request failed before completion.</div>`;
         } finally {
           runBtn.disabled = false;
         }
       }
 
+      document.querySelectorAll(".chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          queryEl.value = chip.dataset.prompt || "";
+          queryEl.focus();
+        });
+      });
+
+      llmProviderEl.addEventListener("change", setDefaultModel);
+      modeEl.addEventListener("change", setModeHelp);
+      clearBtn.addEventListener("click", () => {
+        queryEl.value = "";
+        document.getElementById("llmKey").value = "";
+        resetResults();
+      });
+      copyBtn.addEventListener("click", async () => {
+        const text = mainResult.innerText.trim();
+        if (!text) return;
+        try {
+          await navigator.clipboard.writeText(text);
+          setStatus("ok", "Copied", "Main result copied to clipboard");
+        } catch (_err) {
+          setStatus("error", "Copy failed", "Clipboard access was not available.");
+        }
+      });
+
+      setModeHelp();
+      setDefaultModel();
+      resetResults();
       runBtn.addEventListener("click", run);
     </script>
   </body>

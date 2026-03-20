@@ -124,6 +124,8 @@ def research_report(request_body: ReportRequest, request: Request) -> ReportResp
         session_id=(result.context_state.session_id if result.context_state else None),
         executive_summary=report_bundle.report.executive_summary,
         needs_count=len(report_bundle.report.needs),
+        key_needs=[need.statement for need in report_bundle.report.needs[:8]],
+        gaps_and_unknowns=list(report_bundle.report.gaps_and_unknowns),
         citations=_citations_from_rendered(report_bundle.rendered_citations),
         evidence_map=report_bundle.rendered_evidence_map,
         trace=(result.trace if request_body.include_trace else []),
