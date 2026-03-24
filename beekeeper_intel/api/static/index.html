@@ -7,7 +7,6 @@
     <style>
       :root {
         color-scheme: dark;
-        --bg: #0d0f14;
         --panel: rgba(23, 26, 33, 0.9);
         --panel-strong: rgba(18, 20, 26, 0.96);
         --line: #2d3442;
@@ -37,29 +36,88 @@
         position: fixed;
         inset: 0;
         pointer-events: none;
-        opacity: 0.22;
+        opacity: 0.18;
         background-image:
           linear-gradient(30deg, rgba(246, 183, 60, 0.06) 12%, transparent 12.5%, transparent 87%, rgba(246, 183, 60, 0.06) 87.5%, rgba(246, 183, 60, 0.06)),
           linear-gradient(150deg, rgba(246, 183, 60, 0.06) 12%, transparent 12.5%, transparent 87%, rgba(246, 183, 60, 0.06) 87.5%, rgba(246, 183, 60, 0.06)),
-          linear-gradient(90deg, rgba(246, 183, 60, 0.045) 2%, transparent 2.5%, transparent 97%, rgba(246, 183, 60, 0.045) 97.5%, rgba(246, 183, 60, 0.045));
+          linear-gradient(90deg, rgba(246, 183, 60, 0.04) 2%, transparent 2.5%, transparent 97%, rgba(246, 183, 60, 0.04) 97.5%, rgba(246, 183, 60, 0.04));
         background-size: 52px 90px;
         background-position: 0 0, 0 0, 26px 45px;
       }
       .wrap {
         max-width: 1180px;
-        margin: 32px auto 48px;
+        margin: 28px auto 42px;
         padding: 0 20px 32px;
         position: relative;
         z-index: 1;
       }
-      .hero {
-        display: grid;
-        grid-template-columns: 1.35fr 0.95fr;
-        gap: 18px;
-        margin-bottom: 18px;
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
       }
-      .hero-card,
-      .card {
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .bee-mark {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background:
+          linear-gradient(90deg, #111 0 20%, var(--honey) 20% 42%, #111 42% 57%, var(--honey) 57% 80%, #111 80% 100%);
+        box-shadow:
+          inset 0 0 0 2px rgba(255, 255, 255, 0.06),
+          0 0 18px rgba(246, 183, 60, 0.22);
+      }
+      .brand strong {
+        font-size: 1rem;
+      }
+      .brand small {
+        display: block;
+        color: var(--muted);
+      }
+      .progress {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+      .step-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .step-dot.active {
+        background: var(--honey);
+      }
+      .screen {
+        display: none;
+      }
+      .screen.active {
+        display: block;
+      }
+      .hero, .grid-2, .results-grid, .row {
+        display: grid;
+        gap: 18px;
+      }
+      .hero {
+        grid-template-columns: 1.35fr 0.95fr;
+      }
+      .grid-2, .row {
+        grid-template-columns: 1fr 1fr;
+      }
+      .results-grid {
+        grid-template-columns: 1.55fr 1fr;
+        align-items: start;
+      }
+      .panel, .hero-card, .card {
         background: var(--panel);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.07);
@@ -85,44 +143,42 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        font-size: 0.8rem;
+        font-size: 0.78rem;
         letter-spacing: 0.08em;
         text-transform: uppercase;
         color: var(--honey-soft);
         margin-bottom: 12px;
       }
-      .bee-mark {
-        width: 26px;
-        height: 26px;
-        border-radius: 50%;
-        background:
-          linear-gradient(90deg, #111 0 20%, var(--honey) 20% 42%, #111 42% 57%, var(--honey) 57% 80%, #111 80% 100%);
-        box-shadow:
-          inset 0 0 0 2px rgba(255, 255, 255, 0.06),
-          0 0 18px rgba(246, 183, 60, 0.22);
-      }
       h1 {
         margin: 0 0 10px;
-        font-size: clamp(1.8rem, 2.6vw, 2.8rem);
+        font-size: clamp(1.9rem, 2.7vw, 3rem);
         line-height: 1.05;
       }
-      .subtitle {
+      h2 {
+        margin: 0 0 10px;
+        font-size: 1.15rem;
+      }
+      .subtitle, .muted {
         color: var(--muted);
+      }
+      .subtitle {
         font-size: 1rem;
-        line-height: 1.6;
-        max-width: 62ch;
+        line-height: 1.65;
+        max-width: 64ch;
+      }
+      .hero-metrics, .mode-cards, .need-groups {
+        display: grid;
+        gap: 12px;
       }
       .hero-metrics {
-        display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
         margin-top: 18px;
       }
-      .metric {
+      .metric, .mode-card, .choice-card, .mini-panel {
         background: rgba(12, 14, 19, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.07);
         border-radius: 14px;
-        padding: 12px;
+        padding: 14px;
       }
       .metric strong {
         display: block;
@@ -130,27 +186,12 @@
         color: var(--honey-soft);
         margin-bottom: 4px;
       }
-      .metric span {
-        color: var(--muted);
-        font-size: 0.88rem;
-      }
-      .support-card {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        gap: 14px;
-      }
-      .support-card h2,
-      .card h2 {
-        margin: 0 0 8px;
-        font-size: 1.05rem;
-      }
       .quick-prompts {
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
       }
-      .chip {
+      .chip, .select-chip {
         border: 1px solid rgba(246, 183, 60, 0.24);
         background: rgba(246, 183, 60, 0.08);
         color: #ffe39b;
@@ -160,10 +201,30 @@
         cursor: pointer;
         transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
       }
-      .chip:hover {
+      .chip:hover, .select-chip:hover, .mode-card:hover {
         transform: translateY(-1px);
         border-color: rgba(246, 183, 60, 0.45);
-        background: rgba(246, 183, 60, 0.13);
+      }
+      .select-chip.active, .mode-card.active {
+        background: rgba(246, 183, 60, 0.18);
+        border-color: rgba(246, 183, 60, 0.56);
+        color: #fff3cc;
+      }
+      .mode-cards {
+        grid-template-columns: 1fr 1fr;
+      }
+      .mode-card {
+        cursor: pointer;
+      }
+      .mode-card strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 1rem;
+      }
+      .select-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
       }
       textarea, input, select {
         width: 100%;
@@ -174,7 +235,6 @@
         background: rgba(12, 14, 19, 0.94);
         color: var(--text);
         padding: 11px 12px;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
       }
       textarea:focus, input:focus, select:focus {
         outline: none;
@@ -182,28 +242,10 @@
         box-shadow: 0 0 0 4px rgba(246, 183, 60, 0.1);
       }
       textarea {
-        min-height: 130px;
+        min-height: 120px;
         resize: vertical;
       }
-      .row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 14px;
-      }
-      .three {
-        grid-template-columns: 1.05fr 1.05fr 1.4fr;
-      }
-      .label-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-      }
-      .label-row span {
-        color: var(--muted);
-        font-size: 0.85rem;
-      }
-      .actions {
+      .wizard-actions, .actions {
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
@@ -239,22 +281,24 @@
         opacity: 0.55;
         cursor: not-allowed;
       }
-      .results-grid {
-        display: grid;
-        grid-template-columns: 1.55fr 1fr;
-        gap: 18px;
-        align-items: start;
-      }
-      .response-shell {
+      .workspace-left, .workspace-right {
         display: flex;
         flex-direction: column;
         gap: 14px;
       }
-      .panel {
-        background: var(--panel-strong);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 16px;
-        padding: 16px;
+      .summary-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .summary-tag {
+        background: rgba(127, 214, 166, 0.08);
+        border: 1px solid rgba(127, 214, 166, 0.22);
+        color: #d5ffe6;
+        border-radius: 999px;
+        padding: 8px 11px;
+        font-size: 0.86rem;
       }
       .status-bar {
         display: flex;
@@ -285,20 +329,6 @@
       }
       .status-dot.err {
         background: var(--danger);
-      }
-      .section-title {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 12px;
-      }
-      .section-title h3 {
-        margin: 0;
-        font-size: 1rem;
-      }
-      .section-title .muted {
-        font-size: 0.84rem;
       }
       .answer-text {
         font-size: 1rem;
@@ -340,6 +370,17 @@
         color: #f6dfb0;
         font-style: italic;
       }
+      .section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .section-title h3 {
+        margin: 0;
+        font-size: 1rem;
+      }
       .empty {
         color: var(--muted);
         text-align: center;
@@ -375,189 +416,309 @@
         color: #dbe7f7;
         font-size: 0.88rem;
       }
-      .muted {
-        color: var(--muted);
-        font-size: 0.9rem;
-      }
-      .caption {
-        color: var(--muted);
-        font-size: 0.85rem;
-        margin-top: 8px;
-      }
       .hidden {
         display: none !important;
       }
       @media (max-width: 760px) {
         .hero,
+        .grid-2,
         .results-grid,
+        .hero-metrics,
+        .mode-cards,
         .row {
           grid-template-columns: 1fr;
         }
-        .three,
-        .hero-metrics {
-          grid-template-columns: 1fr;
+        .topbar {
+          flex-direction: column;
+          align-items: flex-start;
         }
       }
     </style>
   </head>
   <body>
     <div class="wrap">
-      <div class="hero">
-        <div class="hero-card">
-          <div class="eyebrow">
-            <div class="bee-mark"></div>
-            Beekeeper Research Intelligence
-          </div>
-          <h1>Grounded beekeeper research with a softer, more human workflow.</h1>
-          <div class="subtitle">
-            Ask about beekeeper pain points, compare personas, generate opportunity-facing
-            reports, and review the evidence behind every answer without digging through raw JSON.
-          </div>
-          <div class="hero-metrics">
-            <div class="metric">
-              <strong>Q&A</strong>
-              <span>Multi-turn answers with citations and evidence context</span>
-            </div>
-            <div class="metric">
-              <strong>Reports</strong>
-              <span>Structured research synthesis for unmet need discovery</span>
-            </div>
-            <div class="metric">
-              <strong>Traceable</strong>
-              <span>See citations, evidence, and pipeline steps when needed</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="hero-card support-card">
+      <div class="topbar">
+        <div class="brand">
+          <div class="bee-mark"></div>
           <div>
-            <h2>Try a question</h2>
-            <div class="muted">Tap a prompt to start with a more natural research workflow.</div>
+            <strong>Beekeeper Research Intelligence Platform</strong>
+            <small>Evidence-grounded research workspace</small>
           </div>
-          <div class="quick-prompts">
-            <button class="chip" data-prompt="What do hobbyist beekeepers struggle with most in varroa monitoring?">Varroa pain points</button>
-            <button class="chip" data-prompt="Compare hobbyist vs commercial unmet needs in overwintering workflows.">Overwintering comparison</button>
-            <button class="chip" data-prompt="What workarounds do beekeepers use when inspections become too labor-intensive?">Workaround analysis</button>
-            <button class="chip" data-prompt="Generate a research summary of queen quality frustrations and product signals.">Queen quality report</button>
-          </div>
-          <div class="caption">
-            Tip: if you paste an API key, the final answer text is generated by the selected LLM.
-            Without a key, the app still runs with the built-in debug fallback.
-          </div>
+        </div>
+        <div class="progress">
+          <span class="step-dot active" id="dot-intro"></span>
+          <span class="step-dot" id="dot-mode"></span>
+          <span class="step-dot" id="dot-needs"></span>
+          <span class="step-dot" id="dot-workspace"></span>
         </div>
       </div>
 
-      <div class="results-grid">
-        <div class="response-shell">
+      <section id="intro-screen" class="screen active">
+        <div class="hero">
+          <div class="hero-card">
+            <div class="eyebrow">Bee-informed research workflow</div>
+            <h1>Start with a guided beekeeper research experience.</h1>
+            <div class="subtitle">
+              This workspace helps teams move from raw beekeeper questions to grounded insights,
+              citations, and evidence-backed summaries. Instead of dropping you into a technical
+              console, it walks you through the research setup first.
+            </div>
+            <div class="hero-metrics">
+              <div class="metric">
+                <strong>Compare</strong>
+                <span>Contrast hobbyist vs commercial pain points and workflows</span>
+              </div>
+              <div class="metric">
+                <strong>Synthesize</strong>
+                <span>Turn evidence into reports, key needs, and opportunity signals</span>
+              </div>
+              <div class="metric">
+                <strong>Trace</strong>
+                <span>Review citations, excerpts, and pipeline steps when needed</span>
+              </div>
+            </div>
+            <div class="wizard-actions">
+              <button id="startBtn" class="primary">Get Started</button>
+            </div>
+          </div>
+
+          <div class="hero-card">
+            <h2>What you can do here</h2>
+            <div class="list">
+              <div class="item">
+                <strong>Investigate real beekeeper pain points</strong>
+                <p>Trace workflow friction, labor burdens, seasonal constraints, and workarounds.</p>
+              </div>
+              <div class="item">
+                <strong>Compare personas and operations</strong>
+                <p>Ask how needs shift across hobbyist, sideliner, and commercial contexts.</p>
+              </div>
+              <div class="item">
+                <strong>Generate customer-facing research summaries</strong>
+                <p>Transform evidence into readable insights instead of raw technical payloads.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="mode-screen" class="screen">
+        <div class="card">
+          <h2>Choose how you want to work</h2>
+          <div class="subtitle">Start with a direct question or a more structured research synthesis workflow.</div>
+          <div class="mode-cards" style="margin-top: 18px;">
+            <button class="mode-card active" id="mode-query-card" type="button">
+              <strong>Conversational Q&amp;A</strong>
+              <div class="muted">Best for a focused question, follow-up comparisons, or a single research thread.</div>
+            </button>
+            <button class="mode-card" id="mode-report-card" type="button">
+              <strong>Research Report</strong>
+              <div class="muted">Best for synthesis, multiple need signals, and opportunity-oriented summaries.</div>
+            </button>
+          </div>
+          <div class="wizard-actions">
+            <button id="backToIntroBtn" class="ghost" type="button">Back</button>
+            <button id="toNeedsBtn" class="primary" type="button">Continue</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="needs-screen" class="screen">
+        <div class="grid-2">
           <div class="card">
-            <div class="label-row">
-              <label for="mode">Mode</label>
-              <span id="modeHelp">Ask a direct research question and receive a grounded answer.</span>
-            </div>
-            <select id="mode">
-              <option value="query">Conversational Q&A</option>
-              <option value="report">Research Report</option>
-            </select>
+            <h2>Select the research need</h2>
+            <div class="subtitle">Choose a persona, topic, and analysis angle. We will use this to prepare the workspace and suggest a starting query.</div>
 
-            <div class="label-row" style="margin-top: 14px;">
-              <label for="query">Query</label>
-              <span>Be explicit when you want comparisons, gaps, or unmet needs.</span>
-            </div>
-            <textarea id="query" placeholder="Ask about beekeeper pain points, workflows, unmet needs..."></textarea>
+            <div class="need-groups" style="margin-top: 18px;">
+              <div class="mini-panel">
+                <strong>Persona focus</strong>
+                <div class="select-row" id="personaChoices">
+                  <button class="select-chip active" data-group="persona" data-value="hobbyist" type="button">Hobbyist</button>
+                  <button class="select-chip" data-group="persona" data-value="commercial" type="button">Commercial</button>
+                  <button class="select-chip" data-group="persona" data-value="sideliner" type="button">Sideliner</button>
+                  <button class="select-chip" data-group="persona" data-value="mixed" type="button">Mixed personas</button>
+                </div>
+              </div>
 
-            <div class="row">
-              <div>
-                <label for="session">Session ID</label>
-                <input id="session" placeholder="demo-session-1" />
+              <div class="mini-panel">
+                <strong>Research topic</strong>
+                <div class="select-row" id="topicChoices">
+                  <button class="select-chip active" data-group="topic" data-value="varroa monitoring" type="button">Varroa monitoring</button>
+                  <button class="select-chip" data-group="topic" data-value="overwintering" type="button">Overwintering</button>
+                  <button class="select-chip" data-group="topic" data-value="queen quality" type="button">Queen quality</button>
+                  <button class="select-chip" data-group="topic" data-value="inspection labor" type="button">Inspection labor</button>
+                </div>
               </div>
-              <div>
-                <label for="user">User ID (optional)</label>
-                <input id="user" placeholder="alex" />
-              </div>
-            </div>
 
-            <div class="row three" style="margin-top: 6px;">
-              <div>
-                <label for="llmProvider">LLM Provider</label>
-                <select id="llmProvider">
-                  <option value="openai">OpenAI</option>
-                  <option value="deepseek" selected>DeepSeek</option>
-                </select>
-              </div>
-              <div>
-                <label for="llmModel">Model (optional)</label>
-                <input id="llmModel" placeholder="Leave blank for the recommended default" />
-              </div>
-              <div>
-                <label for="llmKey">LLM API Key (per request)</label>
-                <input id="llmKey" type="password" placeholder="Paste your key here..." />
-              </div>
-            </div>
-
-            <div class="actions">
-              <button id="runBtn" class="primary">Run Research</button>
-              <button id="clearBtn" class="secondary" type="button">Clear</button>
-              <button id="copyBtn" class="ghost hidden" type="button">Copy Main Result</button>
-            </div>
-          </div>
-
-          <div class="panel">
-            <div class="status-bar">
-              <div class="status-pill">
-                <span id="statusDot" class="status-dot"></span>
-                <span id="statusText">Ready for a question</span>
-              </div>
-              <div id="metaInfo" class="muted">No request yet</div>
-            </div>
-
-            <div id="mainResult" class="answer-text">
-              <div class="empty">
-                Ask a beekeeper research question or generate a report. Your answer will appear here as readable text.
+              <div class="mini-panel">
+                <strong>Output goal</strong>
+                <div class="select-row" id="objectiveChoices">
+                  <button class="select-chip active" data-group="objective" data-value="pain points" type="button">Pain points</button>
+                  <button class="select-chip" data-group="objective" data-value="comparison" type="button">Comparison</button>
+                  <button class="select-chip" data-group="objective" data-value="workarounds" type="button">Workarounds</button>
+                  <button class="select-chip" data-group="objective" data-value="unmet needs" type="button">Unmet needs</button>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="panel">
-            <div class="section-title">
-              <h3>Evidence and citations</h3>
-              <div class="muted">Traceability without reading raw response payloads</div>
+          <div class="card">
+            <h2>Refine the brief</h2>
+            <div class="subtitle">Add a small note if you want the workspace to start with a more specific framing.</div>
+            <label for="briefNote">Optional note</label>
+            <textarea id="briefNote" placeholder="Example: focus on barriers after work, treatment decision uncertainty, and labor-heavy routines."></textarea>
+            <div class="mini-panel" style="margin-top: 14px;">
+              <strong>Starter prompt preview</strong>
+              <p id="starterPreview" class="muted" style="margin: 8px 0 0;">What do hobbyist beekeepers struggle with most in varroa monitoring?</p>
             </div>
-            <div id="citationsList" class="list">
-              <div class="empty">Citations will appear here after you run a question.</div>
+            <div class="wizard-actions">
+              <button id="backToModeBtn" class="ghost" type="button">Back</button>
+              <button id="enterWorkspaceBtn" class="primary" type="button">Enter Workspace</button>
             </div>
           </div>
         </div>
+      </section>
 
-        <div class="response-shell">
-          <div class="panel">
-            <div class="section-title">
-              <h3>Supporting evidence</h3>
-              <div class="muted">Short excerpts preserved from retrieval</div>
+      <section id="workspace-screen" class="screen">
+        <div class="results-grid">
+          <div class="workspace-left">
+            <div class="card">
+              <div class="label-row">
+                <label for="mode">Mode</label>
+                <span id="modeHelp">Ask a direct research question and receive a grounded answer.</span>
+              </div>
+              <select id="mode">
+                <option value="query">Conversational Q&amp;A</option>
+                <option value="report">Research Report</option>
+              </select>
+
+              <div class="summary-bar" id="selectionSummary"></div>
+
+              <div class="label-row" style="margin-top: 14px;">
+                <label for="query">Query</label>
+                <span>Refine the prepared prompt or write your own.</span>
+              </div>
+              <textarea id="query" placeholder="Ask about beekeeper pain points, workflows, unmet needs..."></textarea>
+
+              <div class="row">
+                <div>
+                  <label for="session">Session ID</label>
+                  <input id="session" placeholder="demo-session-1" />
+                </div>
+                <div>
+                  <label for="user">User ID (optional)</label>
+                  <input id="user" placeholder="alex" />
+                </div>
+              </div>
+
+              <div class="row" style="margin-top: 6px;">
+                <div>
+                  <label for="llmProvider">LLM Provider</label>
+                  <select id="llmProvider">
+                    <option value="openai">OpenAI</option>
+                    <option value="deepseek" selected>DeepSeek</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="llmKey">LLM API Key (per request)</label>
+                  <input id="llmKey" type="password" placeholder="Paste your key here..." />
+                </div>
+              </div>
+
+              <div class="actions">
+                <button id="runBtn" class="primary">Run Research</button>
+                <button id="changeSetupBtn" class="secondary" type="button">Change Setup</button>
+                <button id="clearBtn" class="ghost" type="button">Clear</button>
+                <button id="copyBtn" class="ghost hidden" type="button">Copy Main Result</button>
+              </div>
             </div>
-            <div id="evidenceList" class="list">
-              <div class="empty">Evidence snippets will appear here.</div>
+
+            <div class="panel">
+              <div class="status-bar">
+                <div class="status-pill">
+                  <span id="statusDot" class="status-dot"></span>
+                  <span id="statusText">Ready for a question</span>
+                </div>
+                <div id="metaInfo" class="muted">No request yet</div>
+              </div>
+
+              <div id="mainResult" class="answer-text">
+                <div class="empty">
+                  Once you run the workflow, your answer or research summary will appear here as readable text.
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="section-title">
+                <h3>Evidence and citations</h3>
+                <div class="muted">Traceability without raw response parsing</div>
+              </div>
+              <div id="citationsList" class="list">
+                <div class="empty">Citations will appear here after you run a question.</div>
+              </div>
             </div>
           </div>
 
-          <div class="panel">
-            <div class="section-title">
-              <h3>Pipeline trace</h3>
-              <div class="muted">Useful for debugging and QA</div>
+          <div class="workspace-right">
+            <div class="panel">
+              <div class="section-title">
+                <h3>Supporting evidence</h3>
+                <div class="muted">Short excerpts preserved from retrieval</div>
+              </div>
+              <div id="evidenceList" class="list">
+                <div class="empty">Evidence snippets will appear here.</div>
+              </div>
             </div>
-            <div id="traceList" class="list">
-              <div class="empty">Run a request to inspect orchestration steps.</div>
-            </div>
-          </div>
 
-          <details>
-            <summary>Raw response (debug)</summary>
-            <pre id="rawOut">No request yet.</pre>
-          </details>
+            <div class="panel">
+              <div class="section-title">
+                <h3>Pipeline trace</h3>
+                <div class="muted">Useful for debugging and QA</div>
+              </div>
+              <div id="traceList" class="list">
+                <div class="empty">Run a request to inspect orchestration steps.</div>
+              </div>
+            </div>
+
+            <details>
+              <summary>Raw response (debug)</summary>
+              <pre id="rawOut">No request yet.</pre>
+            </details>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
 
     <script>
+      const defaults = {
+        openai: "gpt-4o-mini",
+        deepseek: "deepseek-chat",
+      };
+
+      const state = {
+        screen: "intro",
+        mode: "query",
+        persona: "hobbyist",
+        topic: "varroa monitoring",
+        objective: "pain points",
+        note: "",
+      };
+
+      const screens = {
+        intro: document.getElementById("intro-screen"),
+        mode: document.getElementById("mode-screen"),
+        needs: document.getElementById("needs-screen"),
+        workspace: document.getElementById("workspace-screen"),
+      };
+
+      const dots = {
+        intro: document.getElementById("dot-intro"),
+        mode: document.getElementById("dot-mode"),
+        needs: document.getElementById("dot-needs"),
+        workspace: document.getElementById("dot-workspace"),
+      };
+
       const runBtn = document.getElementById("runBtn");
       const clearBtn = document.getElementById("clearBtn");
       const copyBtn = document.getElementById("copyBtn");
@@ -573,12 +734,10 @@
       const evidenceList = document.getElementById("evidenceList");
       const traceList = document.getElementById("traceList");
       const llmProviderEl = document.getElementById("llmProvider");
-      const llmModelEl = document.getElementById("llmModel");
-
-      const defaults = {
-        openai: "gpt-4o-mini",
-        deepseek: "deepseek-chat",
-      };
+      const llmKeyEl = document.getElementById("llmKey");
+      const selectionSummary = document.getElementById("selectionSummary");
+      const starterPreview = document.getElementById("starterPreview");
+      const briefNoteEl = document.getElementById("briefNote");
 
       function escapeHtml(text) {
         return String(text || "")
@@ -586,6 +745,25 @@
           .replaceAll("<", "&lt;")
           .replaceAll(">", "&gt;")
           .replaceAll("\"", "&quot;");
+      }
+
+      function showScreen(name) {
+        Object.entries(screens).forEach(([key, el]) => {
+          el.classList.toggle("active", key === name);
+        });
+        state.screen = name;
+        updateProgress(name);
+      }
+
+      function updateProgress(name) {
+        ["intro", "mode", "needs", "workspace"].forEach((step) => {
+          dots[step].classList.toggle("active", step === name || isStepBefore(step, name));
+        });
+      }
+
+      function isStepBefore(step, current) {
+        const order = ["intro", "mode", "needs", "workspace"];
+        return order.indexOf(step) < order.indexOf(current);
       }
 
       function setModeHelp() {
@@ -596,18 +774,58 @@
         }
       }
 
-      function setDefaultModel() {
-        if (!llmModelEl.value.trim()) {
-          llmModelEl.placeholder = `Leave blank to use ${defaults[llmProviderEl.value]}`;
-        }
-      }
-
       function setStatus(kind, text, meta) {
         statusText.textContent = text;
         metaInfo.textContent = meta || "";
         statusDot.className = "status-dot";
         if (kind === "ok") statusDot.classList.add("ok");
         if (kind === "error") statusDot.classList.add("err");
+      }
+
+      function buildStarterPrompt() {
+        const modePrefix =
+          state.mode === "report" ? "Generate a research summary" : "What do";
+        let prompt = "";
+        if (state.mode === "report") {
+          prompt = `${modePrefix} about ${state.persona} beekeepers related to ${state.topic}, focusing on ${state.objective}.`;
+        } else {
+          prompt = `${modePrefix} ${state.persona} beekeepers need most in ${state.topic}, especially around ${state.objective}?`;
+        }
+        const note = briefNoteEl.value.trim();
+        if (note) prompt += ` Context: ${note}`;
+        return prompt;
+      }
+
+      function refreshStarterPreview() {
+        state.note = briefNoteEl.value.trim();
+        starterPreview.textContent = buildStarterPrompt();
+      }
+
+      function syncModeCards() {
+        document.getElementById("mode-query-card").classList.toggle("active", state.mode === "query");
+        document.getElementById("mode-report-card").classList.toggle("active", state.mode === "report");
+      }
+
+      function activateChoice(group, value) {
+        state[group] = value;
+        document.querySelectorAll(`[data-group="${group}"]`).forEach((el) => {
+          el.classList.toggle("active", el.dataset.value === value);
+        });
+        refreshStarterPreview();
+      }
+
+      function updateWorkspaceSetup() {
+        modeEl.value = state.mode;
+        setModeHelp();
+        queryEl.value = buildStarterPrompt();
+        selectionSummary.innerHTML = [
+          `Mode: ${state.mode === "report" ? "Research report" : "Conversational Q&A"}`,
+          `Persona: ${state.persona}`,
+          `Topic: ${state.topic}`,
+          `Focus: ${state.objective}`,
+        ]
+          .map((x) => `<span class="summary-tag">${escapeHtml(x)}</span>`)
+          .join("");
       }
 
       function renderParagraphs(text) {
@@ -737,7 +955,7 @@
       }
 
       function resetResults() {
-        mainResult.innerHTML = `<div class="empty">Ask a beekeeper research question or generate a report. Your answer will appear here as readable text.</div>`;
+        mainResult.innerHTML = `<div class="empty">Once you run the workflow, your answer or research summary will appear here as readable text.</div>`;
         citationsList.innerHTML = `<div class="empty">Citations will appear here after you run a question.</div>`;
         evidenceList.innerHTML = `<div class="empty">Evidence snippets will appear here.</div>`;
         traceList.innerHTML = `<div class="empty">Run a request to inspect orchestration steps.</div>`;
@@ -752,8 +970,7 @@
         const sessionId = document.getElementById("session").value.trim();
         const userId = document.getElementById("user").value.trim();
         const llmProvider = llmProviderEl.value;
-        const llmModel = llmModelEl.value.trim();
-        const llmKey = document.getElementById("llmKey").value.trim();
+        const llmKey = llmKeyEl.value.trim();
 
         if (!query) {
           setStatus("error", "Missing question", "Enter a query before running.");
@@ -771,7 +988,6 @@
         if (llmKey) {
           payload.llm_provider = llmProvider;
           payload.llm_api_key = llmKey;
-          if (llmModel) payload.llm_model = llmModel;
         }
 
         runBtn.disabled = true;
@@ -804,20 +1020,43 @@
         }
       }
 
-      document.querySelectorAll(".chip").forEach((chip) => {
+      document.getElementById("startBtn").addEventListener("click", () => showScreen("mode"));
+      document.getElementById("backToIntroBtn").addEventListener("click", () => showScreen("intro"));
+      document.getElementById("toNeedsBtn").addEventListener("click", () => showScreen("needs"));
+      document.getElementById("backToModeBtn").addEventListener("click", () => showScreen("mode"));
+      document.getElementById("enterWorkspaceBtn").addEventListener("click", () => {
+        updateWorkspaceSetup();
+        showScreen("workspace");
+        queryEl.focus();
+      });
+      document.getElementById("changeSetupBtn").addEventListener("click", () => showScreen("needs"));
+
+      document.getElementById("mode-query-card").addEventListener("click", () => {
+        state.mode = "query";
+        syncModeCards();
+        refreshStarterPreview();
+      });
+      document.getElementById("mode-report-card").addEventListener("click", () => {
+        state.mode = "report";
+        syncModeCards();
+        refreshStarterPreview();
+      });
+
+      document.querySelectorAll(".select-chip").forEach((chip) => {
         chip.addEventListener("click", () => {
-          queryEl.value = chip.dataset.prompt || "";
-          queryEl.focus();
+          activateChoice(chip.dataset.group, chip.dataset.value);
         });
       });
 
-      llmProviderEl.addEventListener("change", setDefaultModel);
+      briefNoteEl.addEventListener("input", refreshStarterPreview);
       modeEl.addEventListener("change", setModeHelp);
+
       clearBtn.addEventListener("click", () => {
-        queryEl.value = "";
-        document.getElementById("llmKey").value = "";
+        queryEl.value = buildStarterPrompt();
+        llmKeyEl.value = "";
         resetResults();
       });
+
       copyBtn.addEventListener("click", async () => {
         const text = mainResult.innerText.trim();
         if (!text) return;
@@ -830,7 +1069,8 @@
       });
 
       setModeHelp();
-      setDefaultModel();
+      syncModeCards();
+      refreshStarterPreview();
       resetResults();
       runBtn.addEventListener("click", run);
     </script>
