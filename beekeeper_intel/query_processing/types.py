@@ -7,7 +7,7 @@ depend on them without importing implementation details.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID, uuid4
@@ -15,6 +15,12 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
 
 from beekeeper_intel.models import PersonaType, ResearchTopic, WorkflowStage
+
+
+def utc_now() -> datetime:
+    """Return a timezone-aware UTC timestamp for model defaults."""
+
+    return datetime.now(UTC)
 
 
 class SupportedIntent(str, Enum):
@@ -71,7 +77,7 @@ class QueryProcessingTrace(BaseModel):
     """Debug/observability payload for query processing decisions."""
 
     trace_id: UUID = Field(default_factory=uuid4, description="Trace id for this processing run.")
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="When trace was created.")
+    created_at: datetime = Field(default_factory=utc_now, description="When trace was created.")
     steps: List[str] = Field(default_factory=list, description="Step names executed (in order).")
     notes: Dict[str, Any] = Field(default_factory=dict, description="Arbitrary debug notes (safe to log).")
 
@@ -115,4 +121,3 @@ class QueryProcessingResult(BaseModel):
 
     # Observability
     trace: QueryProcessingTrace = Field(default_factory=QueryProcessingTrace, description="Debug trace.")
-

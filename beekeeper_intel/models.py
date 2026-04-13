@@ -12,12 +12,18 @@ Notes:
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
+
+
+def utc_now() -> datetime:
+    """Return a timezone-aware UTC timestamp for model defaults."""
+
+    return datetime.now(UTC)
 
 
 # -----------------------------
@@ -251,7 +257,7 @@ class ParsedDocument(BaseModel):
     document_id: UUID = Field(default_factory=uuid4, description="Stable id for the document.")
     source: SourceMetadata = Field(..., description="Source metadata and provenance.")
     uri: Optional[str] = Field(None, description="Storage location or file path for this document.")
-    extracted_at: datetime = Field(default_factory=datetime.utcnow, description="When ingestion/extraction ran.")
+    extracted_at: datetime = Field(default_factory=utc_now, description="When ingestion/extraction ran.")
 
     # Parsed structure
     section_index: List[Dict[str, Any]] = Field(
@@ -364,7 +370,7 @@ class ResearchQuery(BaseModel):
 
     query_id: UUID = Field(default_factory=uuid4, description="Stable id for this query.")
     session_id: Optional[str] = Field(None, description="Conversation/session identifier for multi-turn flows.")
-    asked_at: datetime = Field(default_factory=datetime.utcnow, description="Time the query was issued.")
+    asked_at: datetime = Field(default_factory=utc_now, description="Time the query was issued.")
 
     text: str = Field(..., description="User-provided query text.")
     language: Optional[str] = Field(None, description="Language code of the query (e.g., 'en').")
@@ -435,7 +441,7 @@ class ResearchPlan(BaseModel):
 
     # observability
     trace_id: Optional[str] = Field(None, description="Trace identifier for end-to-end observability.")
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="When the plan was created.")
+    created_at: datetime = Field(default_factory=utc_now, description="When the plan was created.")
 
 
 class NeedInsight(BaseModel):
@@ -524,7 +530,7 @@ class CriticReview(BaseModel):
 
     review_id: UUID = Field(default_factory=uuid4, description="Stable id for this review.")
     reviewer: Literal["system", "llm", "human"] = Field(..., description="Who produced this critique.")
-    reviewed_at: datetime = Field(default_factory=datetime.utcnow, description="When review occurred.")
+    reviewed_at: datetime = Field(default_factory=utc_now, description="When review occurred.")
 
     grounding_score_0_1: float = Field(..., ge=0.0, le=1.0, description="How well content is supported by evidence.")
     citation_coverage_0_1: float = Field(..., ge=0.0, le=1.0, description="Fraction of key claims covered by citations.")
@@ -540,8 +546,8 @@ class MultiTurnContextState(BaseModel):
     """
 
     session_id: str = Field(..., description="Conversation/session identifier.")
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="Session creation time.")
-    updated_at: datetime = Field(default_factory=datetime.utcnow, description="Last update time.")
+    created_at: datetime = Field(default_factory=utc_now, description="Session creation time.")
+    updated_at: datetime = Field(default_factory=utc_now, description="Last update time.")
 
     # conversation turns
     turns: List[Dict[str, Any]] = Field(
@@ -582,7 +588,7 @@ class FinalAnswer(BaseModel):
     # generation metadata
     model: Optional[str] = Field(None, description="LLM model identifier used for generation.")
     prompt_id: Optional[str] = Field(None, description="Prompt template/version used.")
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="Answer creation time.")
+    created_at: datetime = Field(default_factory=utc_now, description="Answer creation time.")
 
     # quality + safety
     critic_review: Optional[CriticReview] = Field(None, description="Grounding/usefulness critique.")
@@ -614,7 +620,7 @@ class FinalResearchReport(BaseModel):
     model: Optional[str] = Field(None, description="LLM model identifier used for synthesis.")
     prompt_id: Optional[str] = Field(None, description="Prompt template/version used.")
     critic_review: Optional[CriticReview] = Field(None, description="Grounding/usefulness critique.")
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="Report creation time.")
+    created_at: datetime = Field(default_factory=utc_now, description="Report creation time.")
 
 
 class RetrievalEvaluationRecord(BaseModel):
@@ -625,7 +631,7 @@ class RetrievalEvaluationRecord(BaseModel):
     """
 
     record_id: UUID = Field(default_factory=uuid4, description="Stable id for this evaluation record.")
-    evaluated_at: datetime = Field(default_factory=datetime.utcnow, description="When evaluation ran.")
+    evaluated_at: datetime = Field(default_factory=utc_now, description="When evaluation ran.")
 
     query_id: UUID = Field(..., description="ResearchQuery.query_id being evaluated.")
     dataset_id: Optional[str] = Field(None, description="Evaluation dataset identifier/version.")
@@ -659,4 +665,3 @@ class RetrievalEvaluationRecord(BaseModel):
     )
     notes: Optional[str] = Field(None, description="Free-form notes about anomalies or failures.")
     trace_id: Optional[str] = Field(None, description="Trace id linking to pipeline logs/spans.")
-
