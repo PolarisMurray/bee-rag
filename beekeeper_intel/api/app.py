@@ -5,12 +5,14 @@ FastAPI application entrypoint for Beekeeper Research Intelligence Platform.
 from __future__ import annotations
 
 import logging
+import os
 import time
 from pathlib import Path
 from typing import Optional
 from uuid import uuid4
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 
@@ -24,6 +26,21 @@ from .routes import IngestionService, router
 
 
 logger = logging.getLogger(__name__)
+
+
+DEFAULT_CORS_ORIGINS = (
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+)
+
+
+def _cors_origins() -> list[str]:
+    """Return configured frontend origins for local and deployed demos."""
+
+    configured = [item.strip() for item in os.getenv("BEEKEEPER_CORS_ORIGINS", "").split(",") if item.strip()]
+    return list(dict.fromkeys([*DEFAULT_CORS_ORIGINS, *configured]))
 
 
 def create_app(
@@ -40,6 +57,15 @@ def create_app(
     app = FastAPI(
         title="Beekeeper Research Intelligence Platform API",
         version="0.1.0",
+    )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_cors_origins(),
+        allow_origin_regex=os.getenv("BEEKEEPER_CORS_ORIGIN_REGEX") or r"https://.*\.vercel\.app",
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["x-request-id"],
     )
 
     app.state.orchestrator = orchestrator or PlatformOrchestrator(retriever=DemoRetriever())
@@ -77,4 +103,3 @@ def create_app(
 
 
 app = create_app()
-
