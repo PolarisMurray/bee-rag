@@ -71,5 +71,8 @@ def test_orchestrator_research_synthesis_pipeline():
     assert out.report_bundle is not None
     assert out.report_bundle.report.needs
     assert out.report_bundle.report.citations
+    assert out.report_bundle.report.needs[0].persona.value in {"hobbyist", "commercial", "unknown"}
+    assert out.report_bundle.report.needs[0].source_titles
+    assert out.report_bundle.report.needs[0].evidence_count >= 1
+    assert out.report_bundle.report.needs[0].frequency_1_5 is not None
     assert "needs" in out.report_bundle.rendered_evidence_map
-

@@ -672,11 +672,23 @@
                   <select id="llmProvider">
                     <option value="openai">OpenAI</option>
                     <option value="deepseek" selected>DeepSeek</option>
+                    <option value="gemini">Gemini</option>
                   </select>
                 </div>
                 <div>
                   <label for="llmKey">LLM API Key (per request)</label>
                   <input id="llmKey" type="password" placeholder="Paste your key here..." />
+                </div>
+              </div>
+
+              <div class="row" style="margin-top: 6px;">
+                <div>
+                  <label for="llmModel">LLM Model</label>
+                  <input id="llmModel" placeholder="Uses the default model for the provider" />
+                </div>
+                <div>
+                  <label for="llmSupport">Backend Support</label>
+                  <input id="llmSupport" value="OpenAI-compatible chat completions" disabled />
                 </div>
               </div>
 
@@ -749,6 +761,7 @@
       const defaults = {
         openai: "gpt-4o-mini",
         deepseek: "deepseek-chat",
+        gemini: "gemini-2.5-flash",
       };
 
       const state = {
@@ -790,9 +803,21 @@
       const traceList = document.getElementById("traceList");
       const llmProviderEl = document.getElementById("llmProvider");
       const llmKeyEl = document.getElementById("llmKey");
+      const llmModelEl = document.getElementById("llmModel");
       const selectionSummary = document.getElementById("selectionSummary");
       const starterPreview = document.getElementById("starterPreview");
       const briefNoteEl = document.getElementById("briefNote");
+
+      function syncLlmModel(force = false) {
+        const nextDefault = defaults[llmProviderEl.value] || "";
+        const current = llmModelEl.value.trim();
+        const previousDefault = llmModelEl.dataset.default || "";
+        if (force || !current || current === previousDefault) {
+          llmModelEl.value = nextDefault;
+        }
+        llmModelEl.placeholder = nextDefault || "Uses the default model for the provider";
+        llmModelEl.dataset.default = nextDefault;
+      }
 
       function escapeHtml(text) {
         return String(text || "")
@@ -902,10 +927,53 @@
         return blocks.join("");
       }
 
+      function renderReportResults(results) {
+        if (!Array.isArray(results) || !results.length) {
+          return `<div class="empty">No structured need results were returned for this report.</div>`;
+        }
+
+        return `<div class="list">${results
+          .map((item) => {
+            const meta = [
+              item.persona ? `persona: ${item.persona}` : "",
+              item.topic ? `topic: ${item.topic}` : "",
+              item.workflow_stage ? `workflow: ${item.workflow_stage}` : "",
+              item.frequency_1_5 ? `frequency: ${item.frequency_1_5}/5` : "",
+              `evidence: ${item.evidence_count || 0}`,
+              item.is_multi_source_signal ? "multi-source" : "single-source",
+            ]
+              .filter(Boolean)
+              .join(" · ");
+            const sources = Array.isArray(item.source_titles) ? item.source_titles : [];
+            const sourceLine = sources.length ? `<small>Sources: ${sources.map((x) => escapeHtml(x)).join(" · ")}</small>` : "";
+            return `
+              <div class="item">
+                <strong>${escapeHtml(item.statement)}</strong>
+                <p>${escapeHtml(meta)}</p>
+                ${sourceLine}
+              </div>
+            `;
+          })
+          .join("")}</div>`;
+      }
+
+      function renderDistributionBlock(title, values) {
+        const entries = Object.entries(values || {});
+        if (!entries.length) return "";
+        return `
+          <div class="item">
+            <strong>${escapeHtml(title)}</strong>
+            <p>${entries.map(([key, value]) => `${escapeHtml(key)}: ${escapeHtml(value)}`).join("<br>")}</p>
+          </div>
+        `;
+      }
+
       function renderMainResult(data) {
         copyBtn.classList.remove("hidden");
         if (data.mode === "research_synthesis") {
           const needs = Array.isArray(data.key_needs) ? data.key_needs : [];
+          const results = Array.isArray(data.results) ? data.results : [];
+          const distributions = data.distributions || {};
           const gaps = Array.isArray(data.gaps_and_unknowns) ? data.gaps_and_unknowns : [];
           mainResult.innerHTML = `
             ${renderParagraphs(data.executive_summary)}
@@ -915,11 +983,28 @@
                 <div class="muted">${data.needs_count || 0} prioritized need signals</div>
               </div>
               ${
-                needs.length
-                  ? `<div class="list">${needs.map((need) => `<div class="item"><strong>${escapeHtml(need)}</strong></div>`).join("")}</div>`
-                  : `<div class="empty">No structured need statements were returned for this report.</div>`
+                results.length
+                  ? renderReportResults(results)
+                  : needs.length
+                    ? `<div class="list">${needs.map((need) => `<div class="item"><strong>${escapeHtml(need)}</strong></div>`).join("")}</div>`
+                    : `<div class="empty">No structured need statements were returned for this report.</div>`
               }
             </div>
+            ${
+              Object.keys(distributions).length
+                ? `<div class="panel" style="margin-top: 14px;">
+                    <div class="section-title"><h3>Distribution snapshot</h3><div class="muted">Frequency and density across returned results</div></div>
+                    <div class="list">
+                      ${renderDistributionBlock("Personas", distributions.personas)}
+                      ${renderDistributionBlock("Topics", distributions.topics)}
+                      ${renderDistributionBlock("Workflow stages", distributions.workflow_stages)}
+                      ${renderDistributionBlock("Frequency 1-5", distributions.frequency_1_5)}
+                      ${renderDistributionBlock("Source types", distributions.source_types)}
+                      ${renderDistributionBlock("Evidence density", distributions.evidence_density)}
+                    </div>
+                  </div>`
+                : ""
+            }
             ${
               gaps.length
                 ? `<div class="panel" style="margin-top: 14px;">
@@ -1026,6 +1111,7 @@
         const userId = document.getElementById("user").value.trim();
         const llmProvider = llmProviderEl.value;
         const llmKey = llmKeyEl.value.trim();
+        const llmModel = llmModelEl.value.trim();
 
         if (!query) {
           setStatus("error", "Missing question", "Enter a query before running.");
@@ -1043,6 +1129,7 @@
         if (llmKey) {
           payload.llm_provider = llmProvider;
           payload.llm_api_key = llmKey;
+          if (llmModel) payload.llm_model = llmModel;
         }
 
         runBtn.disabled = true;
@@ -1105,10 +1192,12 @@
 
       briefNoteEl.addEventListener("input", refreshStarterPreview);
       modeEl.addEventListener("change", setModeHelp);
+      llmProviderEl.addEventListener("change", () => syncLlmModel());
 
       clearBtn.addEventListener("click", () => {
         queryEl.value = buildStarterPrompt();
         llmKeyEl.value = "";
+        syncLlmModel(true);
         resetResults();
       });
 
@@ -1126,9 +1215,9 @@
       setModeHelp();
       syncModeCards();
       refreshStarterPreview();
+      syncLlmModel(true);
       resetResults();
       runBtn.addEventListener("click", run);
     </script>
   </body>
 </html>
-

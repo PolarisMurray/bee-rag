@@ -4,6 +4,7 @@ API routes for query, research report, ingestion, health, and metrics.
 
 from __future__ import annotations
 
+from collections import Counter
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Protocol
@@ -12,7 +13,7 @@ from uuid import uuid4
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse
 
-from beekeeper_intel.models import Citation, MultiTurnContextState, RetrievedEvidence
+from beekeeper_intel.models import Citation, MultiTurnContextState, NeedInsight, RetrievedEvidence
 from beekeeper_intel.orchestration import PipelineMode
 
 from .schemas import (
@@ -24,6 +25,8 @@ from .schemas import (
     IngestedDocumentResult,
     QueryRequest,
     QueryResponse,
+    ReportDistributionsView,
+    ReportNeedResultView,
     ReportRequest,
     ReportResponse,
 )
@@ -128,6 +131,8 @@ def research_report(request_body: ReportRequest, request: Request) -> ReportResp
         gaps_and_unknowns=list(report_bundle.report.gaps_and_unknowns),
         citations=_citations_from_rendered(report_bundle.rendered_citations),
         evidence_map=report_bundle.rendered_evidence_map,
+        results=[_report_need_result_view(need) for need in report_bundle.report.needs],
+        distributions=_report_distributions(report_bundle.report.needs),
         trace=(result.trace if request_body.include_trace else []),
     )
     return response
@@ -218,3 +223,69 @@ def _evidence_views(evidence_items: List[RetrievedEvidence]) -> List[EvidenceVie
         )
     return out
 
+
+def _report_need_result_view(need: NeedInsight) -> ReportNeedResultView:
+    supporting_quotes = []
+    for citation in need.citations:
+        if citation.quote and citation.quote not in supporting_quotes:
+            supporting_quotes.append(citation.quote)
+        if len(supporting_quotes) >= 3:
+            break
+
+    return ReportNeedResultView(
+        statement=need.statement,
+        persona=need.persona.value,
+        topic=need.topic.value,
+        workflow_stage=(need.workflow_stage.value if need.workflow_stage is not None else None),
+        pain_severity_1_5=need.pain_severity_1_5,
+        frequency_1_5=need.frequency_1_5,
+        confidence=need.confidence,
+        unmet_need=need.unmet_need,
+        current_workaround=need.current_workaround,
+        product_signal=need.product_signal,
+        evidence_count=need.evidence_count,
+        citation_count=len(need.citations),
+        source_titles=list(need.source_titles),
+        source_type_distribution=dict(need.source_type_distribution),
+        is_multi_source_signal=need.is_multi_source_signal,
+        supporting_quotes=supporting_quotes,
+    )
+
+
+def _report_distributions(needs: List[NeedInsight]) -> ReportDistributionsView:
+    persona_counts = Counter()
+    topic_counts = Counter()
+    workflow_counts = Counter()
+    frequency_counts = Counter()
+    source_type_counts = Counter()
+    density_counts = Counter()
+
+    for need in needs:
+        persona_counts[need.persona.value] += 1
+        topic_counts[need.topic.value] += 1
+        if need.workflow_stage is not None:
+            workflow_counts[need.workflow_stage.value] += 1
+        if need.frequency_1_5 is not None:
+            frequency_counts[str(need.frequency_1_5)] += 1
+        for source_type, count in need.source_type_distribution.items():
+            source_type_counts[source_type] += count
+        density_counts[_density_bucket(need.evidence_count)] += 1
+
+    return ReportDistributionsView(
+        personas=dict(persona_counts),
+        topics=dict(topic_counts),
+        workflow_stages=dict(workflow_counts),
+        frequency_1_5=dict(frequency_counts),
+        source_types=dict(source_type_counts),
+        evidence_density=dict(density_counts),
+    )
+
+
+def _density_bucket(evidence_count: int) -> str:
+    if evidence_count <= 1:
+        return "single_source"
+    if evidence_count == 2:
+        return "paired_signal"
+    if evidence_count <= 4:
+        return "clustered_3_4"
+    return "dense_5_plus"

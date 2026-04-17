@@ -167,12 +167,19 @@ pytest tests/test_orchestrator.py -q
 
 The current debug setup does not require API keys. If you integrate a real LLM provider, store secrets in environment variables or a `.env` file and never commit them.
 
-Suggested key names for future DeepSeek integration:
+Suggested key names for provider-based generation:
 
 ```env
+OPENAI_API_KEY=your_key
+OPENAI_MODEL=gpt-4o-mini
+
 DEEPSEEK_API_KEY=your_key
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-chat
+
+GEMINI_API_KEY=your_key
+GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
 ### Important
@@ -204,4 +211,3 @@ To productionize this stack:
 ## License
 
 Internal project scaffold. Add your preferred license before external distribution.
-

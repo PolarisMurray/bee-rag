@@ -20,6 +20,7 @@ Pipeline goals:
 from __future__ import annotations
 
 import logging
+from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import Enum
@@ -31,6 +32,7 @@ from pydantic import BaseModel, Field
 from beekeeper_intel.agents.extraction_agent import ExtractedNeedInsight, ExtractionAgent
 from beekeeper_intel.citations.integration import build_answer_bundle, build_report_bundle
 from beekeeper_intel.citations.models import ExplainableAnswerBundle, ExplainableReportBundle
+from beekeeper_intel.llm.provider_config import resolve_llm_provider_settings
 from beekeeper_intel.memory.context_state import (
     ConversationTurn,
     EntityTracker,
@@ -486,20 +488,13 @@ class PlatformOrchestrator:
                     OpenAICompatibleClientConfig,
                 )
 
-                provider = (llm_provider or "deepseek").lower()
-                default_models = {
-                    "openai": "gpt-4o-mini",
-                    "deepseek": "deepseek-chat",
-                }
-                default_bases = {
-                    "openai": "https://api.openai.com",
-                    "deepseek": "https://api.deepseek.com",
-                }
-
-                model = llm_model or default_models.get(provider, "deepseek-chat")
-                base_url = default_bases.get(provider, "https://api.deepseek.com")
-
-                cfg = OpenAICompatibleClientConfig(api_key=llm_api_key, base_url=base_url, model=model)
+                provider_settings = resolve_llm_provider_settings(llm_provider, model=llm_model)
+                cfg = OpenAICompatibleClientConfig(
+                    api_key=llm_api_key,
+                    base_url=provider_settings.base_url,
+                    model=provider_settings.model,
+                    chat_completions_path=provider_settings.chat_completions_path,
+                )
                 client = OpenAICompatibleChatClient(cfg=cfg)
 
                 extracted_signals = [
@@ -555,10 +550,27 @@ class PlatformOrchestrator:
         trace: List[OrchestrationTraceEvent],
     ) -> FinalResearchReport:
         clusters = self.extractor.aggregate(extracted)
+        evidence_by_id = {item.evidence_id: item for item in evidence}
         needs: List[NeedInsight] = []
         for c in clusters[:10]:
             persona = c.persona or PersonaType.unknown
             topic = c.topic or ResearchTopic.other
+            cluster_evidence = list(
+                OrderedDict(
+                    (insight.evidence_id, evidence_by_id[insight.evidence_id])
+                    for insight in c.supporting_insights
+                    if insight.evidence_id in evidence_by_id
+                ).values()
+            )
+            source_titles = list(
+                OrderedDict(
+                    (title, None)
+                    for title in (
+                        [citation.source_title for citation in c.citations if citation.source_title]
+                        + [insight.source_title for insight in c.supporting_insights if insight.source_title]
+                    )
+                ).keys()
+            )
             needs.append(
                 NeedInsight(
                     persona=persona,
@@ -566,9 +578,20 @@ class PlatformOrchestrator:
                     workflow_stage=c.workflow_stage,
                     statement=c.canonical_problem,
                     pain_severity_1_5=c.merged_pain_severity_1_5,
+                    frequency_1_5=_estimate_frequency_score(
+                        c.evidence_count,
+                        is_multi_source_signal=c.is_multi_source_signal,
+                        source_type_count=len(c.source_types),
+                    ),
                     unmet_need=True,
                     current_workaround=(c.merged_workarounds[0] if c.merged_workarounds else None),
                     product_signal=(c.merged_product_signals[0] if c.merged_product_signals else None),
+                    evidence=cluster_evidence,
+                    citations=list(c.citations),
+                    evidence_count=c.evidence_count,
+                    source_titles=source_titles,
+                    source_type_distribution=dict(c.source_types),
+                    is_multi_source_signal=c.is_multi_source_signal,
                     confidence=max(0.1, min(0.95, 0.7 + (0.1 if c.is_multi_source_signal else -0.1))),
                 )
             )
@@ -588,20 +611,13 @@ class PlatformOrchestrator:
                     OpenAICompatibleClientConfig,
                 )
 
-                provider = (llm_provider or "deepseek").lower()
-                default_models = {
-                    "openai": "gpt-4o-mini",
-                    "deepseek": "deepseek-chat",
-                }
-                default_bases = {
-                    "openai": "https://api.openai.com",
-                    "deepseek": "https://api.deepseek.com",
-                }
-
-                model = llm_model or default_models.get(provider, "deepseek-chat")
-                base_url = default_bases.get(provider, "https://api.deepseek.com")
-
-                cfg = OpenAICompatibleClientConfig(api_key=llm_api_key, base_url=base_url, model=model)
+                provider_settings = resolve_llm_provider_settings(llm_provider, model=llm_model)
+                cfg = OpenAICompatibleClientConfig(
+                    api_key=llm_api_key,
+                    base_url=provider_settings.base_url,
+                    model=provider_settings.model,
+                    chat_completions_path=provider_settings.chat_completions_path,
+                )
                 client = OpenAICompatibleChatClient(cfg=cfg)
 
                 needs_signals = [
@@ -685,3 +701,31 @@ def _collect_citations(evidence: List[RetrievedEvidence]) -> List[Citation]:
             out.append(c)
     return out
 
+
+def _estimate_frequency_score(
+    evidence_count: int,
+    *,
+    is_multi_source_signal: bool,
+    source_type_count: int,
+) -> int:
+    """
+    Map support density into a coarse 1-5 frequency score for API consumers.
+
+    This is heuristic rather than statistically calibrated. It gives downstream
+    clients a stable comparative signal until real occurrence frequencies are available.
+    """
+
+    score = 1
+    if evidence_count >= 2:
+        score = 2
+    if evidence_count >= 3:
+        score = 3
+    if evidence_count >= 5:
+        score = 4
+    if evidence_count >= 7:
+        score = 5
+
+    if is_multi_source_signal and source_type_count >= 2:
+        score = min(5, score + 1)
+
+    return max(1, min(5, score))

@@ -5,11 +5,12 @@ Typed request/response schemas for FastAPI interface.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from beekeeper_intel.llm.provider_config import LLMProviderName
 from beekeeper_intel.memory.followup_rewriter import FollowupRewriteResult
 from beekeeper_intel.orchestration.orchestrator import OrchestrationTraceEvent, PipelineMode
 
@@ -29,7 +30,7 @@ class QueryRequest(BaseModel):
     session_id: Optional[str] = None
     user_id: Optional[str] = None
     include_trace: bool = Field(False, description="Include orchestration trace in response.")
-    llm_provider: Optional[Literal["openai", "deepseek"]] = Field(
+    llm_provider: Optional[LLMProviderName] = Field(
         None, description="Optional LLM provider; enables LLM synthesis if provided."
     )
     llm_api_key: Optional[str] = Field(None, description="API key for the selected provider (per-request).")
@@ -43,7 +44,7 @@ class ReportRequest(BaseModel):
     session_id: Optional[str] = None
     user_id: Optional[str] = None
     include_trace: bool = Field(False, description="Include orchestration trace in response.")
-    llm_provider: Optional[Literal["openai", "deepseek"]] = Field(
+    llm_provider: Optional[LLMProviderName] = Field(
         None, description="Optional LLM provider; enables LLM synthesis if provided."
     )
     llm_api_key: Optional[str] = Field(None, description="API key for the selected provider (per-request).")
@@ -120,6 +121,38 @@ class QueryResponse(BaseModel):
     trace: List[OrchestrationTraceEvent] = Field(default_factory=list)
 
 
+class ReportNeedResultView(BaseModel):
+    """Structured need result returned in research synthesis responses."""
+
+    statement: str
+    persona: str
+    topic: str
+    workflow_stage: Optional[str] = None
+    pain_severity_1_5: int
+    frequency_1_5: Optional[int] = None
+    confidence: float
+    unmet_need: bool
+    current_workaround: Optional[str] = None
+    product_signal: Optional[str] = None
+    evidence_count: int = 0
+    citation_count: int = 0
+    source_titles: List[str] = Field(default_factory=list)
+    source_type_distribution: Dict[str, int] = Field(default_factory=dict)
+    is_multi_source_signal: bool = False
+    supporting_quotes: List[str] = Field(default_factory=list)
+
+
+class ReportDistributionsView(BaseModel):
+    """Aggregate distributions for synthesized report results."""
+
+    personas: Dict[str, int] = Field(default_factory=dict)
+    topics: Dict[str, int] = Field(default_factory=dict)
+    workflow_stages: Dict[str, int] = Field(default_factory=dict)
+    frequency_1_5: Dict[str, int] = Field(default_factory=dict)
+    source_types: Dict[str, int] = Field(default_factory=dict)
+    evidence_density: Dict[str, int] = Field(default_factory=dict)
+
+
 class ReportResponse(BaseModel):
     """Research report response."""
 
@@ -132,6 +165,8 @@ class ReportResponse(BaseModel):
     gaps_and_unknowns: List[str] = Field(default_factory=list)
     citations: List[CitationView] = Field(default_factory=list)
     evidence_map: Dict[str, List[str]] = Field(default_factory=dict)
+    results: List[ReportNeedResultView] = Field(default_factory=list)
+    distributions: ReportDistributionsView = Field(default_factory=ReportDistributionsView)
     trace: List[OrchestrationTraceEvent] = Field(default_factory=list)
 
 
@@ -152,4 +187,3 @@ class MetricsResponse(BaseModel):
     requests_error: int
     average_latency_ms: float
     per_route: Dict[str, int] = Field(default_factory=dict)
-

@@ -466,6 +466,16 @@ class NeedInsight(BaseModel):
     # evidence and explainability
     evidence: List[RetrievedEvidence] = Field(default_factory=list, description="Supporting evidence bundles.")
     citations: List[Citation] = Field(default_factory=list, description="Flattened citations for the insight.")
+    evidence_count: int = Field(0, ge=0, description="How many evidence items support this insight.")
+    source_titles: List[str] = Field(default_factory=list, description="Distinct source titles supporting the insight.")
+    source_type_distribution: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Distribution of supporting source types for this insight.",
+    )
+    is_multi_source_signal: bool = Field(
+        False,
+        description="Whether the insight is backed by multiple evidence items or source types.",
+    )
     confidence: float = Field(..., ge=0.0, le=1.0, description="Model confidence in this insight.")
 
 

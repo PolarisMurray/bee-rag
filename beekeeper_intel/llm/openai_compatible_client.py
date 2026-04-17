@@ -22,6 +22,7 @@ class OpenAICompatibleClientConfig:
     api_key: str
     base_url: str
     model: str
+    chat_completions_path: str = "/v1/chat/completions"
     temperature: float = 0.2
     max_tokens: int = 800
 
@@ -102,7 +103,10 @@ class OpenAICompatibleChatClient:
         # Lazy import so tests can run without httpx unless LLM is invoked.
         import httpx  # type: ignore
 
-        url = self.cfg.base_url.rstrip("/") + "/v1/chat/completions"
+        path = self.cfg.chat_completions_path
+        if not path.startswith("/"):
+            path = f"/{path}"
+        url = self.cfg.base_url.rstrip("/") + path
         headers = {
             "Authorization": f"Bearer {self.cfg.api_key}",
             "Content-Type": "application/json",
@@ -128,4 +132,3 @@ class OpenAICompatibleChatClient:
             return str(data["choices"][0]["message"]["content"]).strip()
         except Exception as exc:  # pragma: no cover
             raise RuntimeError(f"Unexpected LLM response shape: {data}") from exc
-
