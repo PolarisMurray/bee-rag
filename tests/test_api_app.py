@@ -18,6 +18,21 @@ def test_app_allows_local_frontend_cors_origin():
     assert response.headers["access-control-allow-origin"] == "http://127.0.0.1:5173"
 
 
+def test_app_allows_onrender_preview_origin_via_regex():
+    client = TestClient(create_app())
+
+    response = client.options(
+        "/query",
+        headers={
+            "Origin": "https://beekeeper-demo.onrender.com",
+            "Access-Control-Request-Method": "POST",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "https://beekeeper-demo.onrender.com"
+
+
 def test_research_report_returns_structured_results_and_distributions():
     client = TestClient(create_app())
 

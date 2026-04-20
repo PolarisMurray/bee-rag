@@ -133,6 +133,8 @@ curl -X POST http://127.0.0.1:8000/research/report \
 
 - `executive_summary`
 - `needs_count`
+- `results` with per-need `persona`, `source_titles`, `frequency_1_5`, and `evidence_count`
+- `distributions` for personas, workflow stages, source types, and evidence density
 - `citations`
 - `evidence_map` by section
 - `trace` (optional)
@@ -182,13 +184,49 @@ GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
 GEMINI_MODEL=gemini-2.5-flash
 ```
 
+Optional deployment/runtime settings:
+
+```env
+BEEKEEPER_CORS_ORIGINS=https://your-website-domain.com
+BEEKEEPER_CORS_ORIGIN_REGEX=https://.*\.vercel\.app
+```
+
 ### Important
 
-There is currently no LLM provider adapter module in this repo. Adding one requires:
+This repo already includes request-time support for:
 
-- LLM client module (`beekeeper_intel/llm/...`)
-- settings/env loading
-- orchestrator synthesis integration
+- `openai`
+- `deepseek`
+- `gemini`
+
+If no API key is provided, the app still runs with deterministic demo retrieval and non-provider synthesis fallback.
+
+## Free Render Deploy
+
+This repository now includes a root-level [render.yaml](/Users/chenzishu/Documents/Project/BeeKeeper/render.yaml) for a free Render web service.
+
+### What gets deployed
+
+- One Python web service on the `free` plan
+- Build command: `pip install -r requirements.txt`
+- Start command: `python -m uvicorn beekeeper_intel.api.app:app --host 0.0.0.0 --port $PORT`
+- Health check: `GET /health`
+
+### Deploy steps
+
+1. Push this repository to GitHub.
+2. Sign in to Render and choose `New` -> `Blueprint`.
+3. Connect the GitHub repo and import this repo's `render.yaml`.
+4. Deploy the blueprint.
+5. After the service is live, copy the `https://...onrender.com` URL.
+6. In your frontend deployment, set `VITE_BEEKEEPER_API_BASE` to that URL.
+7. If your website uses a custom domain, set `BEEKEEPER_CORS_ORIGINS` in Render to that exact origin.
+
+### Free plan tradeoffs
+
+- Render free web services spin down after 15 minutes of inactivity.
+- The next request can take around a minute while the service wakes up.
+- This is fine for demos and teammate testing, but not ideal for a production-grade experience.
 
 ## Moving From Demo to Production
 

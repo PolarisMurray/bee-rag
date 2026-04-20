@@ -61,7 +61,7 @@ def create_app(
     app.add_middleware(
         CORSMiddleware,
         allow_origins=_cors_origins(),
-        allow_origin_regex=os.getenv("BEEKEEPER_CORS_ORIGIN_REGEX") or r"https://.*\.vercel\.app",
+        allow_origin_regex=os.getenv("BEEKEEPER_CORS_ORIGIN_REGEX") or r"https://.*\.(vercel\.app|onrender\.com)",
         allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
